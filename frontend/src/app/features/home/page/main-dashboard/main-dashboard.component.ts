@@ -28,6 +28,8 @@ export class MainDashboardComponent {
   selectedNote = signal<NoteView | null>(null);
   viewMode = signal<ViewMode>('grid');
 
+  #savedDuringSession = false;
+
   private readonly sortedNotes = computed(() => [...this.notes()].sort(byNewest));
 
   readonly filteredNotes = computed(() => {
@@ -48,6 +50,7 @@ export class MainDashboardComponent {
     this.#loadNotes();
   }
 
+  // skeleton
   #loadNotes(): void {
     this.loading.set(true);
     this.error.set(null);
@@ -63,38 +66,50 @@ export class MainDashboardComponent {
     });
   }
 
+  // Refresco silencioso sin skeleton
+  #refreshNotes(): void {
+    this.#noteService.getAll().subscribe({
+      next: (data) => this.notes.set(data),
+    });
+  }
+
   toggleView(): void {
     this.viewMode.update(v => (v === 'grid' ? 'list' : 'grid'));
   }
 
   openNewNote(): void {
+    this.#savedDuringSession = false;
     this.selectedNote.set(null);
     this.editorOpen.set(true);
   }
 
   openNote(note: NoteView): void {
+    this.#savedDuringSession = false;
     this.selectedNote.set(note);
     this.editorOpen.set(true);
   }
 
-  onNoteSaved(savedNote: NoteView): void {
-    this.notes.update(notes => {
-      const index = notes.findIndex(n => n.id === savedNote.id);
-      if (index >= 0) {
-        return notes.map(n => (n.id === savedNote.id ? savedNote : n));
-      }
-      return [savedNote, ...notes];
-    });
+  onNoteSaved(_savedNote: NoteView): void {
+    this.#savedDuringSession = true;
   }
 
   onEditorClosed(): void {
     this.editorOpen.set(false);
     this.selectedNote.set(null);
+    if (this.#savedDuringSession) {
+      this.#savedDuringSession = false;
+      this.#refreshNotes();
+    }
   }
 
   deleteNote(id: number): void {
+    // Optimistic: quitar de la UI inmediatamente
+    this.notes.update(notes => notes.filter(n => n.id !== id));
     this.#noteService.delete(id).subscribe({
-      next: () => this.notes.update(notes => notes.filter(n => n.id !== id)),
+      // Re-fetch silencioso para confirmar el estado real del backend
+      next: () => this.#refreshNotes(),
+      // Si falla, restaurar la lista desde el backend
+      error: () => this.#refreshNotes(),
     });
   }
 }

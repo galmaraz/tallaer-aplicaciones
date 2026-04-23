@@ -1,4 +1,4 @@
-<!-- ─── CREAR NOTA ─────────────────────────────────────────────── -->
+<!-- CREAR NOTA -->
 <div class="max-w-3xl mx-auto mb-12">
   <button (click)="openNewNote()"
     class="w-full group flex items-center gap-3 px-6 py-4 rounded-full text-left
@@ -18,7 +18,7 @@
   </button>
 </div>
 
-<!-- ─── HEADER SECCIÓN: título + contador + toggle de vista ──── -->
+<!-- titulo + contador + toggle de vista  -->
 @if (!loading() && !error() && (filteredNotes().length > 0 || isSearching())) {
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-[11px] tracking-[0.25em] text-white/40 font-semibold uppercase flex items-center gap-2">
@@ -36,7 +36,6 @@
       </span>
     </h2>
 
-    <!-- Toggle vista: masonry / lista -->
     <div class="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
       <button (click)="viewMode.set('grid')" title="Vista cuadrícula"
         class="p-1.5 rounded-lg transition-all"
@@ -64,7 +63,7 @@
   </div>
 }
 
-<!-- ─── ESTADO: CARGANDO ──────────────────────────────────────── -->
+<!-- ESTADO: CARGANDO -->
 @if (loading()) {
   <div class="columns-1 md:columns-2 lg:columns-3 gap-5">
     @for (h of [180, 240, 160, 200, 140, 220]; track h) {
@@ -75,7 +74,7 @@
   </div>
 }
 
-<!-- ─── ESTADO: ERROR ─────────────────────────────────────────── -->
+<!-- ESTADO: ERROR -->
 @else if (error()) {
   <div class="flex flex-col items-center justify-center py-24 text-center">
     <div class="w-14 h-14 mb-6 rounded-2xl bg-red-500/[0.10] border border-red-500/20 flex items-center justify-center">
@@ -90,7 +89,7 @@
   </div>
 }
 
-<!-- ─── ESTADO: SIN RESULTADOS DE BÚSQUEDA ───────────────────── -->
+<!-- BÚSQUEDA NOTAS -->
 @else if (filteredNotes().length === 0 && isSearching()) {
   <div class="flex flex-col items-center justify-center py-24 text-center">
     <div class="w-14 h-14 mb-6 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center">
@@ -105,7 +104,6 @@
   </div>
 }
 
-<!-- ─── ESTADO: SIN NOTAS ─────────────────────────────────────── -->
 @else if (filteredNotes().length === 0) {
   <div class="flex flex-col items-center justify-center py-24 text-center">
     <div class="w-14 h-14 mb-6 rounded-2xl bg-purple-500/[0.10] border border-purple-500/20 flex items-center justify-center">
@@ -121,7 +119,6 @@
   </div>
 }
 
-<!-- ─── VISTA MASONRY (cuadrícula) ───────────────────────────── -->
 @else if (viewMode() === 'grid') {
   <div class="columns-1 md:columns-2 lg:columns-3 gap-5">
     @for (note of filteredNotes(); track note.id; let i = $index) {
@@ -132,7 +129,6 @@
   </div>
 }
 
-<!-- ─── VISTA LISTA (columna central) ───────────────────────── -->
 @else {
   <div class="flex flex-col gap-4 max-w-2xl mx-auto">
     @for (note of filteredNotes(); track note.id; let i = $index) {
@@ -143,7 +139,6 @@
   </div>
 }
 
-<!-- ─── MODAL EDITOR ──────────────────────────────────────────── -->
 @if (editorOpen()) {
   <app-note-editor
     [note]="selectedNote()"

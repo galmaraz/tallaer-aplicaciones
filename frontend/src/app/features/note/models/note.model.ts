@@ -18,7 +18,6 @@ export interface NoteView {
   updated_at?: string;
 }
 
-/** Shape that the backend sends/receives (content as raw JSON string) */
 export interface NoteRaw {
   id?: number;
   title: string;
@@ -34,12 +33,23 @@ export interface EditorSnapshot {
 }
 
 export function parseNoteView(raw: NoteRaw): NoteView {
-  let content: NoteContent;
-  try {
-    content = JSON.parse(raw.content) as NoteContent;
-  } catch {
-    content = { type: 'text', body: raw.content };
+  if (typeof raw !== 'object' || raw === null) {
+    return { title: '', content: { type: 'list', items: [] }, activo: true };
   }
+
+  let content: NoteContent;
+  const rawContent = (raw as { content: unknown }).content;
+
+  if (rawContent && typeof rawContent === 'object') {
+    content = rawContent as NoteContent;
+  } else {
+    try {
+      content = JSON.parse(rawContent as string) as NoteContent;
+    } catch {
+      content = { type: 'text', body: rawContent as string };
+    }
+  }
+
   return {
     id: raw.id,
     title: raw.title,
