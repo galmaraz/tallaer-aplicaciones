@@ -1,236 +1,92 @@
-<!-- INPUT CREAR NOTA (pill glass ultra marcado) -->
+<!-- BOTÓN / INPUT CREAR NOTA -->
 <div class="max-w-3xl mx-auto mb-12">
-  <div class="group flex items-center gap-3 px-6 py-4 rounded-full
-              bg-white/[0.06] border border-white/[0.14]
-              backdrop-blur-3xl backdrop-saturate-150
-              shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_12px_40px_rgba(0,0,0,0.35)]
-              hover:bg-white/[0.08] hover:border-white/[0.2]
-              hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_16px_48px_rgba(139,92,246,0.15)]
-              transition-all duration-500">
-    <input type="text" placeholder="Crear una nota....."
-      class="flex-1 bg-transparent text-white/90 placeholder:text-white/40 text-base focus:outline-none" />
-    <button class="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition">
+  <button (click)="openNewNote()"
+    class="w-full group flex items-center gap-3 px-6 py-4 rounded-full text-left
+           bg-white/[0.06] border border-white/[0.14]
+           backdrop-blur-3xl backdrop-saturate-150
+           shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_12px_40px_rgba(0,0,0,0.35)]
+           hover:bg-white/[0.08] hover:border-white/[0.20]
+           hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_16px_48px_rgba(139,92,246,0.15)]
+           transition-all duration-500">
+    <span class="flex-1 text-white/40 text-base">Crear una nota...</span>
+    <!-- Ícono checklist -->
+    <span class="p-2 rounded-lg text-white/35 group-hover:text-white/65 group-hover:bg-white/[0.08] transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect width="18" height="18" x="3" y="3" rx="2" />
         <path d="m9 12 2 2 4-4" />
       </svg>
-    </button>
-    <button class="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-        <circle cx="9" cy="9" r="2" />
-        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-      </svg>
-    </button>
+    </span>
+  </button>
+</div>
+
+<!-- TÍTULO DE SECCIÓN -->
+@if (!loading() && !error() && notes().length > 0) {
+  <h2 class="text-[11px] tracking-[0.25em] text-white/40 font-semibold mb-6 uppercase">
+    Notas Recientes
+  </h2>
+}
+
+<!-- ESTADO: CARGANDO -->
+@if (loading()) {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="h-48 rounded-3xl bg-white/[0.04] border border-white/[0.08] animate-pulse"></div>
+    }
   </div>
-</div>
+}
 
-<!-- TÍTULO -->
-<h2 class="text-[11px] tracking-[0.25em] text-white/40 font-semibold mb-6 uppercase">
-  Notas Recientes
-</h2>
-
-<!-- GRID DE NOTAS -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
-  <!-- NOTA 1: DIBUJOS (con imagen) -->
-  <article class="group relative overflow-hidden rounded-3xl aspect-[4/3]
-                  bg-white/[0.05] border border-white/[0.12]
-                  backdrop-blur-3xl backdrop-saturate-150
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
-                  hover:border-white/25
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_20px_60px_rgba(139,92,246,0.25)]
-                  hover:-translate-y-0.5
-                  transition-all duration-500 cursor-pointer">
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-fuchsia-900/40"></div>
-    <div class="absolute inset-0 opacity-60"
-      style="background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.5), transparent 60%);">
-    </div>
-    <!-- Reflejo superior (simula luz sobre vidrio) -->
-    <div class="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-    <div class="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 to-transparent">
-      <h3 class="text-white font-semibold text-lg">Dibujos</h3>
-      <p class="text-white/60 text-sm mt-0.5">Serie animada</p>
-      <div class="flex items-center justify-between mt-4">
-        <div class="flex gap-3 text-white/50">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          </svg>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 21a8 8 0 0 1 13.292-6" />
-            <circle cx="10" cy="8" r="5" />
-            <path d="M19 16v6" />
-            <path d="M22 19h-6" />
-          </svg>
-        </div>
-        <button class="text-white/50 hover:text-white">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="12" cy="5" r="1.5" />
-            <circle cx="12" cy="12" r="1.5" />
-            <circle cx="12" cy="19" r="1.5" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </article>
-
-  <!-- NOTA 2: COMPRA DE PC (checklist) -->
-  <article class="group relative overflow-hidden p-6 rounded-3xl
-                  bg-white/[0.05] border border-white/[0.12]
-                  backdrop-blur-3xl backdrop-saturate-150
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
-                  hover:border-white/25
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_20px_60px_rgba(139,92,246,0.25)]
-                  hover:-translate-y-0.5
-                  transition-all duration-500 cursor-pointer">
-    <!-- Reflejo superior -->
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none">
-    </div>
-    <h3 class="text-white font-semibold text-lg mb-4 relative">Compra de PC</h3>
-    <ul class="space-y-3 text-sm relative">
-      <li class="flex items-center gap-3">
-        <div class="w-5 h-5 rounded-md bg-gradient-to-br from-purple-400 to-purple-600
-                    flex items-center justify-center
-                    shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3),0_2px_8px_rgba(139,92,246,0.4)]">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <span class="text-white/40 line-through">CPU</span>
-      </li>
-      <li class="flex items-center gap-3">
-        <div class="w-5 h-5 rounded-md border border-white/25 bg-white/[0.03]"></div>
-        <span class="text-white/85">GPU RTX 4080</span>
-      </li>
-      <li class="flex items-center gap-3">
-        <div class="w-5 h-5 rounded-md border border-white/25 bg-white/[0.03]"></div>
-        <span class="text-white/85">Motherboard Z790</span>
-      </li>
-      <li class="flex items-center gap-3">
-        <div class="w-5 h-5 rounded-md border border-white/25 bg-white/[0.03]"></div>
-        <span class="text-white/85">RAM 32GB DDR5</span>
-      </li>
-      <li class="flex items-center gap-3">
-        <div class="w-5 h-5 rounded-md border border-white/25 bg-white/[0.03]"></div>
-        <span class="text-white/85">SSD NVMe 2TB</span>
-      </li>
-    </ul>
-    <button class="relative flex items-center gap-2 mt-5 text-purple-300 hover:text-purple-200 text-sm font-medium">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 5v14" />
-        <path d="M5 12h14" />
-      </svg>
-      Agregar elemento
-    </button>
-  </article>
-
-  <!-- NOTA 3: LECTURA -->
-  <article class="group relative overflow-hidden p-6 rounded-3xl
-                  bg-white/[0.05] border border-white/[0.12]
-                  backdrop-blur-3xl backdrop-saturate-150
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
-                  hover:border-white/25
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_20px_60px_rgba(139,92,246,0.25)]
-                  hover:-translate-y-0.5
-                  transition-all duration-500 cursor-pointer">
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none">
-    </div>
-    <h3 class="text-white font-semibold text-lg mb-3 relative">Lectura</h3>
-    <p class="text-white/75 text-sm leading-relaxed relative">
-      Explorar los conceptos de "Liquid Intelligence" para el nuevo diseño del
-      sistema de notas. Priorizar el uso de glassmorphism y profundidades
-      tonales en lugar de bordes sólidos.
-    </p>
-    <div class="flex gap-2 mt-5 relative">
-      <span class="px-3 py-1 text-[10px] tracking-widest font-semibold uppercase rounded-full
-                   bg-white/[0.06] border border-white/15 text-white/70
-                   backdrop-blur-xl
-                   shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">Diseño</span>
-      <span class="px-3 py-1 text-[10px] tracking-widest font-semibold uppercase rounded-full
-                   bg-white/[0.06] border border-white/15 text-white/70
-                   backdrop-blur-xl
-                   shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">UX</span>
-    </div>
-  </article>
-
-  <!-- NOTA 4: IDEAS DEL PROYECTO (con badge IMPORTANTE) -->
-  <article class="group relative overflow-hidden p-6 rounded-3xl
-                  bg-white/[0.05] border border-white/[0.12]
-                  backdrop-blur-3xl backdrop-saturate-150
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
-                  hover:border-white/25
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_20px_60px_rgba(139,92,246,0.3)]
-                  hover:-translate-y-0.5
-                  transition-all duration-500 cursor-pointer">
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none">
-    </div>
-    <div class="flex items-start justify-between gap-3 mb-3 relative">
-      <h3 class="text-white font-semibold text-lg">Ideas del proyecto</h3>
-      <span class="shrink-0 px-3 py-1 text-[10px] tracking-widest font-bold uppercase rounded-full
-                   bg-gradient-to-r from-purple-500 to-indigo-500 text-white
-                   shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3),0_4px_16px_rgba(139,92,246,0.5)]">
-        Importante
-      </span>
-    </div>
-    <p class="text-white/75 text-sm leading-relaxed relative">
-      Desarrollar una API de sincronización en tiempo real que permita
-      colaboración asíncrona fluida entre dispositivos móviles y escritorio.
-    </p>
-    <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/10 relative">
-      <span class="text-[11px] text-white/40">Creado hace 2 horas</span>
-      <div class="flex gap-2 text-white/40">
-        <button class="hover:text-white transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 17v5" />
-            <path
-              d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
-          </svg>
-        </button>
-        <button class="hover:text-white transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-            <path
-              d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </article>
-
-  <!-- NOTA 5: RECORDATORIO GIMNASIO -->
-  <article class="group relative overflow-hidden p-6 rounded-3xl
-                  bg-white/[0.05] border border-white/[0.12]
-                  backdrop-blur-3xl backdrop-saturate-150
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
-                  hover:border-white/25
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_20px_60px_rgba(139,92,246,0.25)]
-                  hover:-translate-y-0.5
-                  transition-all duration-500 cursor-pointer">
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none">
-    </div>
-    <div class="absolute top-0 left-6 w-12 h-1 rounded-b-full bg-gradient-to-r from-purple-400 to-indigo-400
-                shadow-[0_2px_12px_rgba(139,92,246,0.6)]"></div>
-    <h3 class="text-white font-semibold text-lg mt-4 mb-4 relative">Recordatorio: Gimnasio</h3>
-    <div class="flex items-center gap-2 text-purple-300 text-sm relative">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
+<!-- ESTADO: ERROR DE CONEXIÓN -->
+@else if (error()) {
+  <div class="flex flex-col items-center justify-center py-24 text-center">
+    <div class="w-14 h-14 mb-6 rounded-2xl bg-red-500/[0.10] border border-red-500/20
+                flex items-center justify-center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-red-400" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
+        <line x1="12" x2="12" y1="8" y2="12" />
+        <line x1="12" x2="12.01" y1="16" y2="16" />
       </svg>
-      <span>Hoy, 18:30</span>
     </div>
-  </article>
+    <p class="text-white/55 text-sm font-medium">No se pudo conectar al servidor</p>
+    <p class="text-white/25 text-xs mt-1">Verifica que el backend esté corriendo en el puerto 3000</p>
+  </div>
+}
 
-</div>
+<!-- ESTADO: SIN NOTAS -->
+@else if (notes().length === 0) {
+  <div class="flex flex-col items-center justify-center py-24 text-center">
+    <div class="w-14 h-14 mb-6 rounded-2xl bg-purple-500/[0.10] border border-purple-500/20
+                flex items-center justify-center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-purple-400/70" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" x2="12" y1="11" y2="17" />
+        <line x1="9.5" x2="14.5" y1="14" y2="14" />
+      </svg>
+    </div>
+    <p class="text-white/50 text-sm font-medium">No hay notas aún</p>
+    <p class="text-white/25 text-xs mt-1">Crea tu primera nota haciendo clic arriba</p>
+  </div>
+}
+
+<!-- GRID DE NOTAS REALES -->
+@else {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @for (note of notes(); track note.id) {
+      <app-note-card
+        [note]="note"
+        (editNote)="openNote($event)"
+        (deleteNote)="deleteNote($event)" />
+    }
+  </div>
+}
+
+<!-- MODAL EDITOR DE NOTA -->
+@if (editorOpen()) {
+  <app-note-editor
+    [note]="selectedNote()"
+    (saved)="onNoteSaved($event)"
+    (closed)="onEditorClosed()" />
+}

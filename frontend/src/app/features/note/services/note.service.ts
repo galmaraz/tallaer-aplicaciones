@@ -1,26 +1,33 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { NoteRaw, NoteView, parseNoteView } from '../models/note.model';
 
 @Injectable({ providedIn: 'root' })
 export class NoteService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/notecontroller`;
 
-  getAll(): Observable<any[]> {
-    return this.http.post<any[]>(`${this.apiUrl}/getall`, {});
+  getAll(): Observable<NoteView[]> {
+    return this.http
+      .post<NoteRaw[]>(`${this.apiUrl}/getall`, {})
+      .pipe(map(notes => notes.map(parseNoteView)));
   }
 
-  getById(id: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/getbyid/${id}`, {});
+  getById(id: number): Observable<NoteView> {
+    return this.http
+      .post<NoteRaw>(`${this.apiUrl}/getbyid/${id}`, {})
+      .pipe(map(parseNoteView));
   }
 
-  save(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/save`, data);
+  save(data: NoteRaw): Observable<NoteView> {
+    return this.http
+      .post<NoteRaw>(`${this.apiUrl}/save`, data)
+      .pipe(map(parseNoteView));
   }
 
-  delete(id: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/delete/${id}`, {});
+  delete(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/delete/${id}`, {});
   }
 }
