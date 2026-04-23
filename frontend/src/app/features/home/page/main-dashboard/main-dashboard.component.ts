@@ -1,8 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NoteView } from '../../../note/models/note.model';
 import { NoteService } from '../../../note/services/note.service';
+import { NoteFilterService } from '../../../note/services/note-filter.service';
 import { NoteEditorComponent } from '../../../note/components/note-editor/note-editor.component';
 import { NoteCardComponent } from '../../../note/components/note-card/note-card.component';
+
+type ViewMode = 'grid' | 'list';
+
+const byNewest = (a: NoteView, b: NoteView): number =>
+  new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime();
 
 @Component({
   selector: 'app-main-dashboard',
@@ -13,12 +19,30 @@ import { NoteCardComponent } from '../../../note/components/note-card/note-card.
 })
 export class MainDashboardComponent {
   #noteService = inject(NoteService);
+  #filterService = inject(NoteFilterService);
 
   notes = signal<NoteView[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   editorOpen = signal(false);
   selectedNote = signal<NoteView | null>(null);
+  viewMode = signal<ViewMode>('grid');
+
+  private readonly sortedNotes = computed(() => [...this.notes()].sort(byNewest));
+
+  readonly filteredNotes = computed(() => {
+    const q = this.#filterService.searchQuery().toLowerCase().trim();
+    if (!q) return this.sortedNotes();
+    return this.sortedNotes().filter(n => {
+      const inTitle = n.title.toLowerCase().includes(q);
+      const inItems = n.content.items?.some(i => i.text.toLowerCase().includes(q)) ?? false;
+      const inBody = n.content.body?.toLowerCase().includes(q) ?? false;
+      return inTitle || inItems || inBody;
+    });
+  });
+
+  readonly isSearching = computed(() => this.#filterService.searchQuery().trim().length > 0);
+  readonly searchQuery = computed(() => this.#filterService.searchQuery().trim());
 
   ngOnInit(): void {
     this.#loadNotes();
@@ -37,6 +61,10 @@ export class MainDashboardComponent {
         this.loading.set(false);
       },
     });
+  }
+
+  toggleView(): void {
+    this.viewMode.update(v => (v === 'grid' ? 'list' : 'grid'));
   }
 
   openNewNote(): void {

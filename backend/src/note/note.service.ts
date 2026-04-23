@@ -30,7 +30,6 @@ export class NoteService {
       await this.repository.update({ id: data.id }, data);
       return 'Se actualizo correctamente!!!';
     } else {
-      // eslint-disable-next-line @typescript-eslint/await-thenable
       const entity = await this.repository.create(data);
       await this.repository.save(entity);
       return 'Se guardo correctamente!!!';
