@@ -8,6 +8,7 @@ import { Usuario } from "src/usuario/model/usuario.model";
 export default registerAs(
     'orm.config',
     (): TypeOrmModuleOptions => ({
+        /*
         type: 'postgres',
         host: '127.0.0.1',
         port: 5432,
@@ -16,6 +17,14 @@ export default registerAs(
         database: 'db',
         entities: [Usuario, Noteshare, Note, Noteshare],
         synchronize: true,
-        
+        */
+         type: 'postgres',
+        host: '127.0.0.1',
+        port: 5432,
+        username: 'sa',
+        password: '123',
+        database: 'postgres',
+        entities: [Usuario, Noteshare, Note, Noteshare],
+        synchronize: true,
     }),
 );

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Note } from "src/note/model/note.model";
 import { Usuario } from "src/usuario/model/usuario.model";
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
