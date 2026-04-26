@@ -20,6 +20,7 @@ import {
   serializeNote,
 } from '../../models/note.model';
 import { NoteService } from '../../services/note.service';
+import { AttachmentService } from '../../services/attachment.service';
 
 @Component({
   selector: 'app-note-editor',
@@ -36,12 +37,16 @@ export class NoteEditorComponent implements OnInit {
   attachmentInput?: ElementRef<HTMLInputElement>;
 
   #noteService = inject(NoteService);
+  #attachmentService = inject(AttachmentService);
   #destroyRef = inject(DestroyRef);
 
   title = signal('');
   items = signal<NoteItem[]>([]);
   saving = signal(false);
+  uploadingAttachment = signal(false);
   selectedAttachmentName = signal<string | null>(null);
+  attachmentFeedback = signal<string | null>(null);
+  attachmentFeedbackIsError = signal(false);
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -121,7 +126,68 @@ export class NoteEditorComponent implements OnInit {
   onAttachmentSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    this.selectedAttachmentName.set(file?.name ?? null);
+    this.attachmentFeedback.set(null);
+
+    if (!file) {
+      this.selectedAttachmentName.set(null);
+      return;
+    }
+
+    this.selectedAttachmentName.set(file.name);
+
+    const allowedTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      this.#setAttachmentFeedback('Solo se permiten imagenes png, jpg, jpeg o webp.', true);
+      this.#resetAttachmentInput();
+      return;
+    }
+
+    if (file.size > maxSize) {
+      this.#setAttachmentFeedback('La imagen supera el limite de 5MB.', true);
+      this.#resetAttachmentInput();
+      return;
+    }
+
+    const noteId = this.note()?.id;
+    if (!noteId) {
+      this.#setAttachmentFeedback('Guarda la nota primero para poder subir imagenes.', true);
+      this.#resetAttachmentInput();
+      return;
+    }
+
+    this.uploadingAttachment.set(true);
+
+    this.#attachmentService
+      .save(file, noteId)
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: () => {
+          this.uploadingAttachment.set(false);
+          this.#setAttachmentFeedback('Imagen subida correctamente.', false);
+          this.#resetAttachmentInput();
+        },
+        error: () => {
+          this.uploadingAttachment.set(false);
+          this.#setAttachmentFeedback('No se pudo subir la imagen.', true);
+          this.#resetAttachmentInput();
+        },
+      });
+  }
+
+  #setAttachmentFeedback(message: string, isError: boolean): void {
+    this.attachmentFeedback.set(message);
+    this.attachmentFeedbackIsError.set(isError);
+  }
+
+  #resetAttachmentInput(): void {
+    this.attachmentInput?.nativeElement && (this.attachmentInput.nativeElement.value = '');
   }
 
   undo(): void {

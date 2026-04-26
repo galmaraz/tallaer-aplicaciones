@@ -175,6 +175,7 @@
           [class]="selectedAttachmentName()
             ? 'text-purple-300 bg-purple-500/[0.15]'
             : 'text-white/45 hover:bg-white/[0.08] hover:text-white/80'"
+          [disabled]="uploadingAttachment()"
           title="Subir imagen">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -220,9 +221,19 @@
         @if (saving()) {
           <span class="text-xs text-white/35 animate-pulse">Guardando...</span>
         }
+        @if (uploadingAttachment()) {
+          <span class="text-xs text-purple-300/80 animate-pulse">Subiendo imagen...</span>
+        }
         @if (selectedAttachmentName()) {
           <span class="max-w-40 truncate text-[11px] text-purple-300/80" [title]="selectedAttachmentName()">
             {{ selectedAttachmentName() }}
+          </span>
+        }
+        @if (attachmentFeedback()) {
+          <span class="max-w-52 truncate text-[11px]"
+            [class]="attachmentFeedbackIsError() ? 'text-red-300/90' : 'text-emerald-300/90'"
+            [title]="attachmentFeedback()">
+            {{ attachmentFeedback() }}
           </span>
         }
         <button (click)="close()" [disabled]="saving()"
