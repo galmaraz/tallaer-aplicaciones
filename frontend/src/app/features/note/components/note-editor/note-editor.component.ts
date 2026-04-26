@@ -2,12 +2,14 @@ import {
   Component,
   computed,
   DestroyRef,
+  ElementRef,
   HostListener,
   inject,
   input,
   OnInit,
   output,
   signal,
+  ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -30,12 +32,16 @@ export class NoteEditorComponent implements OnInit {
   saved = output<NoteView>();
   closed = output<void>();
 
+  @ViewChild('attachmentInput')
+  attachmentInput?: ElementRef<HTMLInputElement>;
+
   #noteService = inject(NoteService);
   #destroyRef = inject(DestroyRef);
 
   title = signal('');
   items = signal<NoteItem[]>([]);
   saving = signal(false);
+  selectedAttachmentName = signal<string | null>(null);
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -106,6 +112,16 @@ export class NoteEditorComponent implements OnInit {
 
   onItemBlur(): void {
     this.#saveToHistoryIfChanged();
+  }
+
+  openAttachmentPicker(): void {
+    this.attachmentInput?.nativeElement.click();
+  }
+
+  onAttachmentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.selectedAttachmentName.set(file?.name ?? null);
   }
 
   undo(): void {

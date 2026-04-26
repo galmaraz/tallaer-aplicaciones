@@ -132,18 +132,107 @@
       </button>
     </div>
 
-    <!-- Footer: botón Cerrar -->
-    <div class="flex items-center justify-end gap-3 px-5 py-3 mt-1 border-t border-white/[0.06]">
-      @if (saving()) {
-        <span class="text-xs text-white/35 animate-pulse">Guardando...</span>
-      }
-      <button (click)="close()" [disabled]="saving()"
-        class="px-5 py-2 rounded-xl text-sm font-medium border transition-all"
-        [class]="saving()
-          ? 'text-white/25 border-white/[0.08] cursor-not-allowed'
-          : 'text-white/65 border-white/[0.12] hover:text-white hover:bg-white/[0.08] hover:border-white/25'">
-        Cerrar
-      </button>
+    <!-- Footer: barra de acciones inferior -->
+    <div class="flex items-center justify-between gap-4 px-5 py-3 mt-1 border-t border-white/[0.06]">
+      <div class="flex items-center gap-1.5 text-white/45">
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Formato">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16" /><path d="M6 16h12" /><path d="M8 4h8" /><path d="M12 4v12" />
+          </svg>
+        </button>
+
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Paleta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" />
+            <circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" />
+            <path d="M12 3a9 9 0 1 0 0 18h1a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4h1a3 3 0 0 0 0-6h-1z" />
+          </svg>
+        </button>
+
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Recordatorio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+        </button>
+
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Asignar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="19" x2="19" y1="8" y2="14" />
+            <line x1="22" x2="16" y1="11" y2="11" />
+          </svg>
+        </button>
+
+
+        <button (click)="openAttachmentPicker()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="selectedAttachmentName()
+            ? 'text-purple-300 bg-purple-500/[0.15]'
+            : 'text-white/45 hover:bg-white/[0.08] hover:text-white/80'"
+          title="Subir imagen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="m21 15-5-5L5 21" />
+          </svg>
+        </button>
+        <input #attachmentInput type="file" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden"
+          (change)="onAttachmentSelected($event)" />
+
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Más opciones">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+
+        <div class="w-px h-5 bg-white/[0.10] mx-1"></div>
+
+        <button (click)="undo()" [disabled]="!canUndo() || saving()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="canUndo() && !saving() ? 'hover:bg-white/[0.08] hover:text-white/80' : 'text-white/20 cursor-not-allowed'"
+          title="Deshacer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+          </svg>
+        </button>
+
+        <button (click)="redo()" [disabled]="!canRedo() || saving()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="canRedo() && !saving() ? 'hover:bg-white/[0.08] hover:text-white/80' : 'text-white/20 cursor-not-allowed'"
+          title="Rehacer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        @if (saving()) {
+          <span class="text-xs text-white/35 animate-pulse">Guardando...</span>
+        }
+        @if (selectedAttachmentName()) {
+          <span class="max-w-40 truncate text-[11px] text-purple-300/80" [title]="selectedAttachmentName()">
+            {{ selectedAttachmentName() }}
+          </span>
+        }
+        <button (click)="close()" [disabled]="saving()"
+          class="px-5 py-2 rounded-full text-sm font-semibold border transition-all"
+          [class]="saving()
+            ? 'text-white/25 border-white/[0.08] cursor-not-allowed'
+            : 'text-white/90 border-white/[0.20] bg-white/[0.08] hover:bg-white/[0.14] hover:border-white/30'">
+          Cerrar
+        </button>
+      </div>
     </div>
 
     <!-- Glow line inferior -->
