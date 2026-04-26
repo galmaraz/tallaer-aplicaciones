@@ -1,0 +1,97 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+  data-backdrop="true"
+  (click)="onBackdropClick($event)">
+
+  <div class="relative w-full max-w-lg mx-4 rounded-3xl overflow-hidden
+              bg-white/[0.07] border border-white/[0.15]
+              backdrop-blur-3xl backdrop-saturate-150
+              shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_24px_80px_rgba(0,0,0,0.6),0_0_60px_rgba(139,92,246,0.12)]">
+
+    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent"></div>
+
+    <div class="flex items-center justify-between px-5 pt-4">
+      <div>
+        <h2 class="text-lg font-semibold text-white">
+          {{ recordatorio() ? 'Editar recordatorio' : 'Nuevo recordatorio' }}
+        </h2>
+        <p class="text-xs text-white/35 mt-0.5">Programa una alerta estilo Google Keep</p>
+      </div>
+
+      <button (click)="cerrarModal()" title="Cerrar"
+        class="p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.08] transition-all">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="guardarFormulario()" class="px-5 pt-5 pb-4 space-y-4">
+      <div>
+        <label class="block text-xs text-white/40 mb-1.5">Título</label>
+        <input
+          type="text"
+          name="titulo"
+          [ngModel]="titulo()"
+          (ngModelChange)="titulo.set($event)"
+          placeholder="Ej: Exponer módulo de recordatorios"
+          class="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/[0.12]
+                 text-white placeholder:text-white/25 focus:outline-none focus:border-purple-400/50
+                 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.18)] transition-all" />
+      </div>
+
+      <div>
+        <label class="block text-xs text-white/40 mb-1.5">Descripción</label>
+        <textarea
+          name="descripcion"
+          rows="3"
+          [ngModel]="descripcion()"
+          (ngModelChange)="descripcion.set($event)"
+          placeholder="Detalle del recordatorio..."
+          class="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/[0.12]
+                 text-white placeholder:text-white/25 focus:outline-none focus:border-purple-400/50
+                 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.18)] transition-all resize-none"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs text-white/40 mb-1.5">Fecha y hora</label>
+        <input
+          type="datetime-local"
+          name="fechaRecordatorio"
+          [ngModel]="fechaRecordatorio()"
+          (ngModelChange)="fechaRecordatorio.set($event)"
+          class="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/[0.12]
+                 text-white focus:outline-none focus:border-purple-400/50
+                 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.18)] transition-all" />
+      </div>
+
+      <label class="flex items-center gap-3 text-sm text-white/65 select-none">
+        <input
+          type="checkbox"
+          name="completado"
+          [ngModel]="completado()"
+          (ngModelChange)="completado.set($event)"
+          class="w-4 h-4 accent-purple-500" />
+        Marcar como completado
+      </label>
+
+      <div class="flex items-center justify-end gap-3 pt-2 border-t border-white/[0.08]">
+        <button type="button" (click)="cerrarModal()"
+          class="px-5 py-2 rounded-xl text-sm text-white/60 border border-white/[0.12]
+                 hover:text-white hover:bg-white/[0.08] transition-all">
+          Cancelar
+        </button>
+
+        <button type="submit"
+          [disabled]="!titulo().trim()"
+          class="px-5 py-2 rounded-xl text-sm font-semibold transition-all"
+          [class]="titulo().trim()
+            ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-500 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40'
+            : 'text-white/25 bg-white/[0.06] cursor-not-allowed'">
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
