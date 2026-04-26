@@ -1,0 +1,92 @@
+<div class="max-w-3xl mx-auto mb-10">
+  <button (click)="abrirNuevo()"
+    class="w-full group flex items-center gap-3 px-6 py-4 rounded-full text-left
+           bg-white/[0.06] border border-white/[0.14]
+           backdrop-blur-3xl backdrop-saturate-150
+           shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_12px_40px_rgba(0,0,0,0.35)]
+           hover:bg-white/[0.08] hover:border-white/[0.20]
+           transition-all duration-500">
+    <span class="flex-1 text-white/40 text-base">Crear un recordatorio...</span>
+    <span class="p-2 rounded-lg text-white/35 group-hover:text-white/65 group-hover:bg-white/[0.08] transition-all">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    </span>
+  </button>
+</div>
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-[11px] tracking-[0.25em] text-white/40 font-semibold uppercase">
+      Recordatorios
+    </h2>
+    <p class="text-white/30 text-xs mt-1">
+      Pendientes: {{ pendientes() }} · Completados: {{ completados() }}
+    </p>
+  </div>
+
+  <div class="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] w-fit">
+    <button (click)="vista.set('todos')"
+      class="px-3 py-1.5 rounded-lg text-xs transition-all"
+      [class]="vista() === 'todos' ? 'bg-white/[0.10] text-white' : 'text-white/35 hover:text-white/65'">
+      Todos
+    </button>
+    <button (click)="vista.set('pendientes')"
+      class="px-3 py-1.5 rounded-lg text-xs transition-all"
+      [class]="vista() === 'pendientes' ? 'bg-white/[0.10] text-white' : 'text-white/35 hover:text-white/65'">
+      Pendientes
+    </button>
+    <button (click)="vista.set('completados')"
+      class="px-3 py-1.5 rounded-lg text-xs transition-all"
+      [class]="vista() === 'completados' ? 'bg-white/[0.10] text-white' : 'text-white/35 hover:text-white/65'">
+      Completados
+    </button>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @for (h of [180, 160, 200, 150, 190, 170]; track h) {
+      <div class="rounded-3xl bg-white/[0.04] border border-white/[0.08] animate-pulse" [style.height.px]="h"></div>
+    }
+  </div>
+}
+@else if (error()) {
+  <div class="flex flex-col items-center justify-center py-24 text-center">
+    <p class="text-white/55 text-sm font-medium">{{ error() }}</p>
+    <p class="text-white/25 text-xs mt-1">Verifica que el backend esté corriendo</p>
+  </div>
+}
+@else if (filtrados().length === 0) {
+  <div class="flex flex-col items-center justify-center py-24 text-center">
+    <div class="w-14 h-14 mb-6 rounded-2xl bg-purple-500/[0.10] border border-purple-500/20 flex items-center justify-center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-purple-400/70" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    </div>
+    <p class="text-white/50 text-sm font-medium">No hay recordatorios</p>
+    <p class="text-white/25 text-xs mt-1">Crea tu primer recordatorio haciendo clic arriba</p>
+  </div>
+}
+@else {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @for (recordatorio of filtrados(); track recordatorio.id) {
+      <app-recordatorio-card
+        [recordatorio]="recordatorio"
+        (editar)="abrirEditar($event)"
+        (eliminar)="eliminarRecordatorio($event)"
+        (completar)="completarRecordatorio($event)" />
+    }
+  </div>
+}
+
+@if (editorOpen()) {
+  <app-recordatorio-editor
+    [recordatorio]="selectedRecordatorio()"
+    (guardar)="guardarRecordatorio($event)"
+    (cerrar)="cerrarEditor()" />
+}
