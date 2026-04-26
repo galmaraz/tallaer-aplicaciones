@@ -23,7 +23,8 @@ import { RecordatorioService } from './recordatorio/recordatorio.service';
       expandVariables: true,
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: ormConfig,
+      inject: [ormConfig.KEY],
+      useFactory: (config) => config,
     }),
     TypeOrmModule.forFeature([Usuario, Noteshare, Note, Recordatorio]),
   ],

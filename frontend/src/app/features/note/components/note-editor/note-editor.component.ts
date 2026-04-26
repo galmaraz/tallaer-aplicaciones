@@ -18,11 +18,13 @@ import {
   serializeNote,
 } from '../../models/note.model';
 import { NoteService } from '../../services/note.service';
+import { NoteShareService } from '../../services/note-share.service';
+import { UserSelectorComponent } from '../usuario-selector/user-selector.component';
 
 @Component({
   selector: 'app-note-editor',
   standalone: true,
-  imports: [],
+  imports: [UserSelectorComponent],
   templateUrl: './note-editor.component.html',
 })
 export class NoteEditorComponent implements OnInit {
@@ -33,9 +35,15 @@ export class NoteEditorComponent implements OnInit {
   #noteService = inject(NoteService);
   #destroyRef = inject(DestroyRef);
 
+  #noteShareService = inject(NoteShareService);
+  showShareModal = signal(false);
+  sharing = signal(false);
+
   title = signal('');
   items = signal<NoteItem[]>([]);
   saving = signal(false);
+  showToast = signal(false);
+  
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -74,6 +82,32 @@ export class NoteEditorComponent implements OnInit {
   onTitleChange(value: string): void {
     this.title.set(value);
   }
+
+
+  onShareIconClick() {
+    this.showShareModal.set(true);
+  }
+
+
+  confirmarCompartir(idUsuarioDestino: number) {
+  const notaActual = this.note();
+  
+  if (notaActual?.id) {
+    this.sharing.set(true);
+    this.#noteShareService.compartir(notaActual.id, idUsuarioDestino).subscribe({
+      next: () => {
+        this.sharing.set(false);
+        this.showShareModal.set(false); 
+        this.showToast.set(true); 
+      
+        setTimeout(() => this.showToast.set(false), 3000);
+      },
+      error: () => {
+        this.sharing.set(false);
+      }
+    });
+  }
+}
 
   onTitleBlur(): void {
     this.#saveToHistoryIfChanged();

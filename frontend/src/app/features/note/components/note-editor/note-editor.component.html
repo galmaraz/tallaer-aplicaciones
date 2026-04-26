@@ -41,8 +41,9 @@
         </button>
 
         <!-- Asignar / persona+ -->
-        <button class="p-2 rounded-xl text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all"
-          title="Asignar">
+        <button (click)="onShareIconClick()" 
+          class="p-2 rounded-xl text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all"
+          title="Compartir nota">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -150,3 +151,23 @@
     <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent pointer-events-none"></div>
   </div>
 </div>
+
+@if (showShareModal()) {
+  <app-user-selector 
+    (userSelected)="confirmarCompartir($event)" 
+    (canceled)="showShareModal.set(false)">
+  </app-user-selector>
+}
+
+@if (showToast()) {
+  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#1c1c1e]/80 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <span class="text-sm text-white/90 font-medium tracking-wide">Nota compartida con éxito</span>
+    </div>
+  </div>
+}
