@@ -3,6 +3,24 @@
   data-backdrop="true"
   (click)="onBackdropClick($event)">
 
+  <!-- Lightbox: imagen expandida -->
+  @if (expandedImageUrl()) {
+    <div class="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-md"
+      (click)="closeExpandedImage()">
+      <img [src]="expandedImageUrl()!" alt="Imagen ampliada"
+        class="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-2xl object-contain
+               ring-1 ring-white/10" />
+      <button (click)="closeExpandedImage()"
+        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80
+               flex items-center justify-center text-white/70 hover:text-white transition-all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
+  }
+
   <!-- Card -->
   <div class="relative w-full max-w-lg mx-4 rounded-3xl overflow-hidden
               bg-white/[0.07] border border-white/[0.15]
@@ -12,37 +30,26 @@
     <!-- Glow line superior -->
     <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none"></div>
 
-    <!-- Toolbar: undo | redo | persona+ | (espacio) | cerrar X -->
+    <!-- Toolbar -->
     <div class="flex items-center justify-between px-5 pt-4">
       <div class="flex items-center gap-0.5">
-
-        <!-- Deshacer -->
         <button (click)="undo()" [disabled]="!canUndo() || saving()" title="Deshacer (Ctrl+Z)"
           class="p-2 rounded-xl transition-all"
-          [class]="canUndo() && !saving()
-            ? 'text-white/60 hover:text-white hover:bg-white/[0.08]'
-            : 'text-white/20 cursor-not-allowed'">
+          [class]="canUndo() && !saving() ? 'text-white/60 hover:text-white hover:bg-white/[0.08]' : 'text-white/20 cursor-not-allowed'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
           </svg>
         </button>
-
-        <!-- Rehacer -->
         <button (click)="redo()" [disabled]="!canRedo() || saving()" title="Rehacer (Ctrl+Y)"
           class="p-2 rounded-xl transition-all"
-          [class]="canRedo() && !saving()
-            ? 'text-white/60 hover:text-white hover:bg-white/[0.08]'
-            : 'text-white/20 cursor-not-allowed'">
+          [class]="canRedo() && !saving() ? 'text-white/60 hover:text-white hover:bg-white/[0.08]' : 'text-white/20 cursor-not-allowed'">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
           </svg>
         </button>
-
-        <!-- Asignar / persona+ -->
-        <button class="p-2 rounded-xl text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all"
-          title="Asignar">
+        <button class="p-2 rounded-xl text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all" title="Asignar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -52,13 +59,9 @@
           </svg>
         </button>
       </div>
-
-      <!-- Cerrar X (toolbar) -->
       <button (click)="close()" [disabled]="saving()" title="Cerrar"
         class="p-2 rounded-xl transition-all"
-        [class]="saving()
-          ? 'text-white/20 cursor-not-allowed'
-          : 'text-white/50 hover:text-white hover:bg-white/[0.08]'">
+        [class]="saving() ? 'text-white/20 cursor-not-allowed' : 'text-white/50 hover:text-white hover:bg-white/[0.08]'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 6 6 18" /><path d="m6 6 12 12" />
@@ -79,12 +82,83 @@
     <!-- Divisor -->
     <div class="mx-5 mt-3 h-px bg-white/[0.08]"></div>
 
+    <!-- ── GALERÍA DE IMÁGENES (Google Keep style) ── -->
+    @if (loadingAttachments()) {
+      <div class="px-5 pt-3 flex items-center gap-2 text-white/30 text-xs">
+        <svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+        Cargando imágenes...
+      </div>
+    }
+
+    @if (attachments().length > 0) {
+      <div class="pt-3 px-3"
+        [class]="attachments().length === 1 ? 'grid grid-cols-1' : 'grid grid-cols-2 gap-1.5'">
+        @for (att of attachments(); track att.id) {
+          <div class="relative group/img rounded-xl overflow-hidden bg-white/[0.05] cursor-pointer"
+            [style.height]="attachments().length === 1 ? '200px' : '130px'"
+            (click)="att.imageUrl && openExpandedImage(att.imageUrl)">
+
+            @if (att.imageUrl) {
+              <img [src]="att.imageUrl" [alt]="att.filename"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105" />
+            } @else {
+              <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-white/20">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m21 15-5-5L5 21" />
+                </svg>
+                <span class="text-[10px]">Sin vista previa</span>
+              </div>
+            }
+
+            <!-- Overlay oscuro en hover -->
+            <div class="absolute inset-0 bg-black/0 group-hover/img:bg-black/35 transition-all duration-200 pointer-events-none"></div>
+
+            <!-- Botón eliminar (esquina superior derecha) -->
+            <button
+              (click)="$event.stopPropagation(); deleteAttachment(att.id)"
+              [disabled]="deletingAttachmentId() === att.id"
+              class="absolute top-1.5 right-1.5 w-7 h-7 rounded-full
+                     bg-black/55 hover:bg-red-500/80
+                     flex items-center justify-center
+                     opacity-0 group-hover/img:opacity-100
+                     transition-all duration-200 text-white/80 hover:text-white
+                     shadow-lg"
+              title="Eliminar imagen">
+              @if (deletingAttachmentId() === att.id) {
+                <svg class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              } @else {
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                </svg>
+              }
+            </button>
+
+            <!-- Nombre del archivo (parte inferior, aparece en hover) -->
+            <div class="absolute inset-x-0 bottom-0 px-2.5 py-1.5
+                        bg-gradient-to-t from-black/65 to-transparent
+                        opacity-0 group-hover/img:opacity-100 transition-all duration-200
+                        pointer-events-none">
+              <p class="text-[10px] text-white/75 truncate">{{ att.filename }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+    <!-- ── FIN GALERÍA ── -->
+
     <!-- Lista de elementos (scrollable) -->
     <div class="px-5 pt-3 max-h-64 overflow-y-auto space-y-1">
       @for (item of items(); track $index) {
         <div class="flex items-center gap-3 py-1 group/item">
-
-          <!-- Checkbox -->
           <button (click)="toggleItem($index)"
             class="shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all"
             [class]="item.checked
@@ -97,16 +171,12 @@
               </svg>
             }
           </button>
-
-          <!-- Texto del elemento -->
           <input type="text" placeholder="Elemento de la lista..." autocomplete="off"
             [value]="item.text"
             (input)="updateItemText($index, $any($event.target).value)"
             (blur)="onItemBlur()"
             class="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-white/25 transition-colors"
             [class]="item.checked ? 'text-white/35 line-through' : 'text-white/85'" />
-
-          <!-- Quitar elemento X -->
           <button (click)="removeItem($index)"
             class="shrink-0 p-1 rounded-lg transition-all opacity-0 group-hover/item:opacity-100
                    text-white/40 hover:text-white/80 hover:bg-white/[0.08]">
@@ -132,18 +202,115 @@
       </button>
     </div>
 
-    <!-- Footer: botón Cerrar -->
-    <div class="flex items-center justify-end gap-3 px-5 py-3 mt-1 border-t border-white/[0.06]">
-      @if (saving()) {
-        <span class="text-xs text-white/35 animate-pulse">Guardando...</span>
-      }
-      <button (click)="close()" [disabled]="saving()"
-        class="px-5 py-2 rounded-xl text-sm font-medium border transition-all"
-        [class]="saving()
-          ? 'text-white/25 border-white/[0.08] cursor-not-allowed'
-          : 'text-white/65 border-white/[0.12] hover:text-white hover:bg-white/[0.08] hover:border-white/25'">
-        Cerrar
-      </button>
+    <!-- Footer -->
+    <div class="flex items-center justify-between gap-4 px-5 py-3 mt-1 border-t border-white/[0.06]">
+      <div class="flex items-center gap-1.5 text-white/45">
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Formato">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16" /><path d="M6 16h12" /><path d="M8 4h8" /><path d="M12 4v12" />
+          </svg>
+        </button>
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Paleta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" />
+            <circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" />
+            <path d="M12 3a9 9 0 1 0 0 18h1a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4h1a3 3 0 0 0 0-6h-1z" />
+          </svg>
+        </button>
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Recordatorio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+        </button>
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Asignar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="19" x2="19" y1="8" y2="14" />
+            <line x1="22" x2="16" y1="11" y2="11" />
+          </svg>
+        </button>
+
+        <!-- Botón subir imagen -->
+        <button (click)="openAttachmentPicker()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="uploadingAttachment()
+            ? 'text-purple-300 bg-purple-500/[0.15] cursor-not-allowed'
+            : attachments().length > 0
+              ? 'text-purple-300/80 bg-purple-500/[0.10] hover:bg-white/[0.08] hover:text-white/80'
+              : 'text-white/45 hover:bg-white/[0.08] hover:text-white/80'"
+          [disabled]="uploadingAttachment()"
+          title="Subir imagen">
+          @if (uploadingAttachment()) {
+            <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          } @else {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          }
+        </button>
+        <input #attachmentInput type="file" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden"
+          (change)="onAttachmentSelected($event)" />
+
+        <button class="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white/80 transition-all" title="Más opciones">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+
+        <div class="w-px h-5 bg-white/[0.10] mx-1"></div>
+
+        <button (click)="undo()" [disabled]="!canUndo() || saving()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="canUndo() && !saving() ? 'hover:bg-white/[0.08] hover:text-white/80' : 'text-white/20 cursor-not-allowed'"
+          title="Deshacer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+          </svg>
+        </button>
+        <button (click)="redo()" [disabled]="!canRedo() || saving()"
+          class="p-1.5 rounded-lg transition-all"
+          [class]="canRedo() && !saving() ? 'hover:bg-white/[0.08] hover:text-white/80' : 'text-white/20 cursor-not-allowed'"
+          title="Rehacer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        @if (saving()) {
+          <span class="text-xs text-white/35 animate-pulse">Guardando...</span>
+        }
+        @if (attachmentFeedback()) {
+          <span class="max-w-52 truncate text-[11px]"
+            [class]="attachmentFeedbackIsError() ? 'text-red-300/90' : 'text-emerald-300/90'"
+            [title]="attachmentFeedback()!">
+            {{ attachmentFeedback() }}
+          </span>
+        }
+        <button (click)="close()" [disabled]="saving()"
+          class="px-5 py-2 rounded-full text-sm font-semibold border transition-all"
+          [class]="saving()
+            ? 'text-white/25 border-white/[0.08] cursor-not-allowed'
+            : 'text-white/90 border-white/[0.20] bg-white/[0.08] hover:bg-white/[0.14] hover:border-white/30'">
+          Cerrar
+        </button>
+      </div>
     </div>
 
     <!-- Glow line inferior -->
