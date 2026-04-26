@@ -22,19 +22,18 @@ export class NoteService {
     return data;
   }
 
-  async save(data: NoteDto) {
-    if (data.id != undefined && data.id != null && data.id != 0) {
-      const usuario = await this.repository.findOneBy({ id: data.id });
-      if (!usuario) throw new Error(`Entidad con id ${data.id} no encontrado`);
+async save(data: NoteDto) {
+  if (data.id != undefined && data.id != null && data.id != 0) {
+    const entity = await this.repository.findOneBy({ id: data.id });
+    if (!entity) throw new Error(`Entidad con id ${data.id} no encontrado`);
 
-      await this.repository.update({ id: data.id }, data);
-      return 'Se actualizo correctamente!!!';
-    } else {
-      const entity = await this.repository.create(data);
-      await this.repository.save(entity);
-      return 'Se guardo correctamente!!!';
-    }
+    await this.repository.update({ id: data.id }, data);
+    return this.repository.findOneBy({ id: data.id }); // retorna la nota actualizada
+  } else {
+    const entity = this.repository.create(data);
+    return await this.repository.save(entity); // retorna la nota creada con su ID
   }
+}
 
   async delete(id: number) {
     const data = await this.findById(id);
