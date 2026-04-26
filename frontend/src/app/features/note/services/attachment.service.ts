@@ -25,11 +25,16 @@ export class AttachmentService {
       .pipe(map(parseAttachmentView));
   }
 
+  getByNoteId(noteId: number): Observable<AttachmentView[]> {
+    return this.http
+      .post<AttachmentRaw[]>(`${this.apiUrl}/getbynote/${noteId}`, {})
+      .pipe(map(items => items.map(parseAttachmentView)));
+  }
+
   save(file: File, noteId: number): Observable<AttachmentView> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('note_id', String(noteId));
-
     return this.http
       .post<AttachmentRaw>(`${this.apiUrl}/save`, formData)
       .pipe(map(parseAttachmentView));
