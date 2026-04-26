@@ -19,15 +19,37 @@ export class RecordatorioEditorComponent {
   fechaRecordatorio = signal('');
   completado = signal(false);
 
-  constructor() {
-    effect(() => {
-      const r = this.recordatorio();
+  // constructor() {
+  //   effect(() => {
+  //     const r = this.recordatorio();
 
-      this.titulo.set(r?.titulo ?? '');
-      this.descripcion.set(r?.descripcion ?? '');
-      this.completado.set(r?.completado ?? false);
-      this.fechaRecordatorio.set(this.convertirAInputDateTime(r?.fechaRecordatorio));
-    });
+  //     this.titulo.set(r?.titulo ?? '');
+  //     this.descripcion.set(r?.descripcion ?? '');
+  //     this.completado.set(r?.completado ?? false);
+  //     this.fechaRecordatorio.set(this.convertirAInputDateTime(r?.fechaRecordatorio));
+  //   });
+  // }
+  constructor() {
+  effect(() => {
+    const r = this.recordatorio();
+
+    // SI NO HAY RECORDATORIO (nuevo)
+    if (!r) {
+      this.titulo.set('');
+      this.descripcion.set('');
+      this.completado.set(false);
+      this.fechaRecordatorio.set(this.convertirAInputDateTime());
+      return;
+    }
+
+    //SI ES EDICIÓN (carga datos)
+    this.titulo.set(r.titulo);
+    this.descripcion.set(r.descripcion ?? '');
+    this.completado.set(r.completado);
+    this.fechaRecordatorio.set(
+      this.convertirAInputDateTime(r.fechaRecordatorio)
+      );
+     });
   }
 
   private convertirAInputDateTime(fecha?: string): string {
