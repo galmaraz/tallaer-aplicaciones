@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Note } from '../../note/model/note.model';
 
 @Entity('recordatorios')
 export class Recordatorio {
@@ -19,4 +20,10 @@ export class Recordatorio {
 
   @Column({ default: true })
   estado: boolean;
+
+  @ManyToOne(() => Note, note => note.recordatorios, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  note: Note;
 }

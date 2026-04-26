@@ -5,7 +5,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Recordatorio } from '../../recordatorio/model/recordatorio.model';
 
 @Entity()
 export class Note {
@@ -21,6 +23,9 @@ export class Note {
   @Column()
   @IsBoolean()
   activo: boolean;
+
+  @OneToMany(() => Recordatorio, recordatorio => recordatorio.note)
+  recordatorios: Recordatorio[];
 
   @CreateDateColumn()
   created_at: Date;

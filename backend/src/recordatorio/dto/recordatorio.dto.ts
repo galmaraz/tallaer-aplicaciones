@@ -2,6 +2,7 @@ import {
   IsBoolean,
   IsDateString,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -26,4 +27,8 @@ export class RecordatorioDto {
   @IsBoolean()
   @IsOptional()
   estado?: boolean;
+
+  @IsNumber()
+  @IsNotEmpty()
+  noteId: number;
 }
