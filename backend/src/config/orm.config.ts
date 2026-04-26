@@ -4,6 +4,7 @@ import { Note } from "src/note/model/note.model";
 import { Noteshare } from "src/noteshare/model/noteshare.model";
 import { Usuario } from "src/usuario/model/usuario.model";
 import { Recordatorio } from "src/recordatorio/model/recordatorio.model";
+import { Attachment } from "src/attachment/model/attachment.model";
 
 
 export default registerAs(
@@ -23,9 +24,9 @@ export default registerAs(
         host: '127.0.0.1',
         port: 5432,
         username: 'sa',
-        password: '123',
-        database: 'postgres',
-        entities: [Usuario, Noteshare, Note, Recordatorio],
+        password: '1844',
+        database: 'googlekeep-db',
+        entities: [Usuario, Noteshare, Note, Recordatorio, Attachment],
         synchronize: true,
     }),
 );

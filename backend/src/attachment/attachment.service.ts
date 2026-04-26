@@ -1,36 +1,104 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Attachment } from "./model/attachment.model";
-import { Note } from "src/note/model/note.model";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Attachment } from './model/attachment.model';
+import { Note } from 'src/note/model/note.model';
+
+type UploadedAttachmentFile = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+};
 
 @Injectable()
 export class AttachmentService {
-    constructor(
-        @InjectRepository(Attachment)
-        private readonly repository: Repository<Attachment>
-    ) {}
+  constructor(
+    @InjectRepository(Attachment)
+    private readonly repository: Repository<Attachment>,
+    @InjectRepository(Note)
+    private readonly noteRepository: Repository<Note>,
+  ) {}
 
-    getAll() {
-        return this.repository.find();
-    }
+  async getAll() {
+    return await this.repository.find({
+      relations: { note: true },
+    });
+  }
 
-    async save(data: Express.Multer.File, entityId: number) {
-        if (!data)
-            throw new BadRequestException('No se recibio ningun archivo');
+  async getById(id: number) {
+    return await this.findById(id);
+  }
 
-        if (!data.buffer || data.buffer.length === 0)
-            throw new BadRequestException('El archivo no contiene buffer. Verifica memoryStorage en el interceptor');
+  async save(data: UploadedAttachmentFile, entityId: number) {
+    if (!data) throw new BadRequestException('No se recibio ningun archivo');
 
-        // implemtar
-        var attachment = new Attachment();
-        attachment.filename = data.originalname;
-        attachment.filetype = data.mimetype;
-        attachment.filesize = data.size;
-        attachment.filedata = data.buffer;
-        attachment.note = { id: entityId } as Note;
-        return await this.repository.save(attachment);
-        
-        // return `Se guardo correctamente el archivo ${data.buffer} para la nota ${entityId}`;
-    }
+    if (!entityId)
+      throw new BadRequestException('Debe enviar el id de la nota asociada');
+
+    if (!data.buffer || data.buffer.length === 0)
+      throw new BadRequestException(
+        'El archivo no contiene buffer. Verifica memoryStorage en el interceptor',
+      );
+
+    const validImageTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+    if (!validImageTypes.includes(data.mimetype.toLowerCase()))
+      throw new BadRequestException(
+        'Solo se permiten archivos de imagen (png, jpg, jpeg, webp)',
+      );
+
+    const note = await this.noteRepository.findOne({ where: { id: entityId } });
+    if (!note)
+      throw new NotFoundException(`No existe una nota con id ${entityId}`);
+
+    const attachment = new Attachment();
+    attachment.filename = data.originalname;
+    attachment.filetype = data.mimetype;
+    attachment.filesize = data.size;
+    attachment.filedata = data.buffer;
+    attachment.note = note;
+    return await this.repository.save(attachment);
+  }
+
+ async getByNoteId(noteId: number) {
+  const note = await this.noteRepository.findOne({ where: { id: noteId } });
+  if (!note)
+    throw new NotFoundException(`No existe una nota con id ${noteId}`);
+
+  return await this.repository.find({
+    where: { note: { id: noteId } },
+    select: ['id', 'filename', 'filetype', 'filesize', 'filedata'],
+  });
+ }
+
+
+  async delete(id: number) {
+    const attachment = await this.findById(id);
+    await this.repository.delete({ id });
+    return {
+      message: 'Attachment eliminado correctamente',
+      id: attachment.id,
+    };
+  }
+
+  private async findById(id: number) {
+    const attachment = await this.repository.findOne({
+      where: { id },
+      relations: { note: true },
+    });
+
+    if (!attachment)
+      throw new NotFoundException(`Attachment con id ${id} no encontrado`);
+
+    return attachment;
+  }
 }

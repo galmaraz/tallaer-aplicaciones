@@ -1,5 +1,5 @@
 <article (click)="onEdit()"
-  class="group relative overflow-hidden p-6 rounded-3xl cursor-pointer
+  class="group relative overflow-hidden rounded-3xl cursor-pointer
          bg-white/[0.05] border border-white/[0.12]
          backdrop-blur-3xl backdrop-saturate-150
          shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
@@ -8,79 +8,95 @@
          hover:-translate-y-0.5
          transition-all duration-500">
 
-  <!-- Reflejo glass superior -->
-  <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none"></div>
-
-  <!-- Título + contador checklist -->
-  <div class="flex items-start justify-between gap-3 mb-4 relative">
-    <h3 class="text-white font-semibold text-lg leading-tight">{{ note().title }}</h3>
-    @if (note().content.type === 'list' && totalCount > 0) {
-      <span class="shrink-0 text-[10px] text-white/35 font-medium mt-1">
-        {{ checkedCount }}/{{ totalCount }}
-      </span>
-    }
-  </div>
-
-  @if (note().content.type === 'list') {
-
-    <!-- Barra de progreso -->
-    @if (totalCount > 0) {
-      <div class="relative mb-4 h-[3px] rounded-full bg-white/[0.08] overflow-hidden">
-        <div class="absolute inset-y-0 left-0 rounded-full
-                    bg-gradient-to-r from-purple-500 to-indigo-400
-                    transition-all duration-500"
-          [style.width.%]="(checkedCount / totalCount) * 100">
-        </div>
-      </div>
-    }
-
-    <!-- Preview de elementos -->
-    <ul class="space-y-2 text-sm relative">
-      @for (item of previewItems; track $index) {
-        <li class="flex items-center gap-3">
-          <div class="shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all"
-            [class]="item.checked
-              ? 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-[0_2px_6px_rgba(139,92,246,0.35)]'
-              : 'border border-white/25 bg-white/[0.03]'">
-            @if (item.checked) {
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            }
-          </div>
-          <span class="truncate"
-            [class]="item.checked ? 'text-white/35 line-through' : 'text-white/80'">
-            {{ item.text }}
-          </span>
-        </li>
-      }
-      @if (remainingCount > 0) {
-        <li class="text-white/30 text-xs pl-7">+ {{ remainingCount }} más</li>
-      }
-    </ul>
-
-    @if (totalCount === 0) {
-      <p class="text-white/25 text-sm italic">Lista vacía</p>
-    }
-
-  } @else {
-    <p class="text-white/75 text-sm leading-relaxed line-clamp-4">{{ note().content.body }}</p>
+  <!-- Reflejo glass superior (solo cuando NO hay imagen) -->
+  @if (!coverImageUrl()) {
+    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none"></div>
   }
 
-  <!-- Footer: fecha + botón eliminar -->
-  <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.07] relative">
-    <span class="text-[10px] text-white/30 font-medium">
-      {{ note().updated_at | date: 'dd/MM/yyyy' }}
-    </span>
-    <button (click)="onDelete($event)"
-      class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all
-             text-white/35 hover:text-red-400 hover:bg-red-500/[0.12]">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      </svg>
-    </button>
+  <!-- Imagen de portada (estilo Google Keep) -->
+  @if (coverImageUrl()) {
+    <div class="w-full overflow-hidden" style="height: 160px;">
+      <img [src]="coverImageUrl()!"
+        alt="Imagen de la nota"
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+    </div>
+  }
+
+  <!-- Contenido de la tarjeta -->
+  <div class="p-6">
+
+    <!-- Título + contador checklist -->
+    <div class="flex items-start justify-between gap-3 mb-4 relative">
+      <h3 class="text-white font-semibold text-lg leading-tight">{{ note().title }}</h3>
+      @if (note().content.type === 'list' && totalCount > 0) {
+        <span class="shrink-0 text-[10px] text-white/35 font-medium mt-1">
+          {{ checkedCount }}/{{ totalCount }}
+        </span>
+      }
+    </div>
+
+    @if (note().content.type === 'list') {
+
+      <!-- Barra de progreso -->
+      @if (totalCount > 0) {
+        <div class="relative mb-4 h-[3px] rounded-full bg-white/[0.08] overflow-hidden">
+          <div class="absolute inset-y-0 left-0 rounded-full
+                      bg-gradient-to-r from-purple-500 to-indigo-400
+                      transition-all duration-500"
+            [style.width.%]="(checkedCount / totalCount) * 100">
+          </div>
+        </div>
+      }
+
+      <!-- Preview de elementos -->
+      <ul class="space-y-2 text-sm relative">
+        @for (item of previewItems; track $index) {
+          <li class="flex items-center gap-3">
+            <div class="shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all"
+              [class]="item.checked
+                ? 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-[0_2px_6px_rgba(139,92,246,0.35)]'
+                : 'border border-white/25 bg-white/[0.03]'">
+              @if (item.checked) {
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              }
+            </div>
+            <span class="truncate"
+              [class]="item.checked ? 'text-white/35 line-through' : 'text-white/80'">
+              {{ item.text }}
+            </span>
+          </li>
+        }
+        @if (remainingCount > 0) {
+          <li class="text-white/30 text-xs pl-7">+ {{ remainingCount }} más</li>
+        }
+      </ul>
+
+      @if (totalCount === 0) {
+        <p class="text-white/25 text-sm italic">Lista vacía</p>
+      }
+
+    } @else {
+      <p class="text-white/75 text-sm leading-relaxed line-clamp-4">{{ note().content.body }}</p>
+    }
+
+    <!-- Footer: fecha + botón eliminar -->
+    <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.07] relative">
+      <span class="text-[10px] text-white/30 font-medium">
+        {{ note().updated_at | date: 'dd/MM/yyyy' }}
+      </span>
+      <button (click)="onDelete($event)"
+        class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all
+               text-white/35 hover:text-red-400 hover:bg-red-500/[0.12]">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+      </button>
+    </div>
+
   </div>
 </article>
