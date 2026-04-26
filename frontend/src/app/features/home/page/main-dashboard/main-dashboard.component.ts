@@ -27,6 +27,7 @@ export class MainDashboardComponent {
   editorOpen = signal(false);
   selectedNote = signal<NoteView | null>(null);
   viewMode = signal<ViewMode>('grid');
+  openWithImagePicker = signal(false);
 
   #savedDuringSession = false;
 
@@ -78,10 +79,18 @@ export class MainDashboardComponent {
   }
 
   openNewNote(): void {
-    this.#savedDuringSession = false;
-    this.selectedNote.set(null);
-    this.editorOpen.set(true);
-  }
+  this.#savedDuringSession = false;
+  this.selectedNote.set(null);
+  this.openWithImagePicker.set(false);
+  this.editorOpen.set(true);
+}
+
+  openNewNoteWithImage(): void {
+  this.#savedDuringSession = false;
+  this.selectedNote.set(null);
+  this.openWithImagePicker.set(true);
+  this.editorOpen.set(true);
+}
 
   openNote(note: NoteView): void {
     this.#savedDuringSession = false;
@@ -94,13 +103,14 @@ export class MainDashboardComponent {
   }
 
   onEditorClosed(): void {
-    this.editorOpen.set(false);
-    this.selectedNote.set(null);
-    if (this.#savedDuringSession) {
-      this.#savedDuringSession = false;
-      this.#refreshNotes();
-    }
+  this.editorOpen.set(false);
+  this.selectedNote.set(null);
+  this.openWithImagePicker.set(false);
+  if (this.#savedDuringSession) {
+    this.#savedDuringSession = false;
+    this.#refreshNotes();
   }
+}
 
   deleteNote(id: number): void {
     // Optimistic: quitar de la UI inmediatamente

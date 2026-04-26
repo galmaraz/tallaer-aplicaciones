@@ -35,6 +35,7 @@ export class NoteEditorComponent implements OnInit {
   note = input<NoteView | null>(null);
   saved = output<NoteView>();
   closed = output<void>();
+  autoOpenImagePicker = input(false);
 
   @ViewChild('attachmentInput')
   attachmentInput?: ElementRef<HTMLInputElement>;
@@ -77,6 +78,9 @@ export class NoteEditorComponent implements OnInit {
       if (note.id) {
         this.#loadAttachments(note.id);
       }
+    }
+    if (this.autoOpenImagePicker()) {
+      setTimeout(() => this.openAttachmentPicker(), 150);
     }
   }
 
@@ -213,12 +217,46 @@ export class NoteEditorComponent implements OnInit {
     }
 
     const noteId = this.note()?.id;
-    if (!noteId) {
-      this.#setAttachmentFeedback('Guarda la nota primero para poder subir imágenes.', true);
-      this.#resetAttachmentInput();
+    // Si ya tiene ID, subir directamente
+    if (noteId) {
+      this.#uploadAttachment(file, noteId);
       return;
     }
 
+    // Si no tiene ID, guardar la nota primero y luego subir
+    const title = this.title().trim();
+    const items = this.items().filter(i => i.text.trim());
+    const content: NoteContent = { type: 'list', items };
+    const noteView: NoteView = {
+      title: title || 'Sin título',
+      content,
+      activo: true,
+    };
+
+    this.saving.set(true);
+    this.#noteService
+      .save(serializeNote(noteView))
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: (savedNote) => {
+          console.log('Nota guardada:', savedNote); // <-- agrega esto
+          this.saving.set(false);
+          this.saved.emit(savedNote); // notificar al dashboard para que refresque
+          if (savedNote.id) {
+            this.#uploadAttachment(file, savedNote.id);
+          }
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err); // <-- agrega esto
+
+          this.saving.set(false);
+          this.#setAttachmentFeedback('No se pudo guardar la nota.', true);
+          this.#resetAttachmentInput();
+        },
+      });
+}
+
+  #uploadAttachment(file: File, noteId: number): void {
     this.uploadingAttachment.set(true);
     this.#attachmentService
       .save(file, noteId)
