@@ -33,6 +33,7 @@ export class NoteEditorComponent implements OnInit {
   note = input<NoteView | null>(null);
   saved = output<NoteView>();
   closed = output<void>();
+  autoOpenImagePicker = input(false);
 
   @ViewChild('attachmentInput')
   attachmentInput?: ElementRef<HTMLInputElement>;
@@ -69,6 +70,9 @@ export class NoteEditorComponent implements OnInit {
       if (note.id) {
         this.#loadAttachments(note.id);
       }
+    }
+    if (this.autoOpenImagePicker()) {
+      setTimeout(() => this.openAttachmentPicker(), 150);
     }
   }
 
