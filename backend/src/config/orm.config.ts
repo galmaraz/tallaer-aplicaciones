@@ -4,6 +4,7 @@ import { Note } from "src/note/model/note.model";
 import { Noteshare } from "src/noteshare/model/noteshare.model";
 import { Usuario } from "src/usuario/model/usuario.model";
 import { Recordatorio } from "src/recordatorio/model/recordatorio.model";
+import { Attachment } from "src/attachment/model/attachment.model";
 
 
 export default registerAs(
@@ -25,7 +26,7 @@ export default registerAs(
         username: 'sa',
         password: '1844',
         database: 'googlekeep-db',
-        entities: [Usuario, Noteshare, Note, Recordatorio],
+        entities: [Usuario, Noteshare, Note, Recordatorio, Attachment],
         synchronize: true,
     }),
 );
