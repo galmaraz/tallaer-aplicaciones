@@ -21,6 +21,7 @@ import {
 } from '../../models/note.model';
 import { NoteService } from '../../services/note.service';
 import { AttachmentService } from '../../services/attachment.service';
+import { AttachmentView } from '../../models/attachment.model';
 
 @Component({
   selector: 'app-note-editor',
@@ -44,9 +45,13 @@ export class NoteEditorComponent implements OnInit {
   items = signal<NoteItem[]>([]);
   saving = signal(false);
   uploadingAttachment = signal(false);
-  selectedAttachmentName = signal<string | null>(null);
   attachmentFeedback = signal<string | null>(null);
   attachmentFeedbackIsError = signal(false);
+
+  attachments = signal<AttachmentView[]>([]);
+  loadingAttachments = signal(false);
+  deletingAttachmentId = signal<number | null>(null);
+  expandedImageUrl = signal<string | null>(null); // para ver imagen en grande
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -61,7 +66,46 @@ export class NoteEditorComponent implements OnInit {
       if (note.content.type === 'list') {
         this.items.set(note.content.items?.map(i => ({ ...i })) ?? []);
       }
+      if (note.id) {
+        this.#loadAttachments(note.id);
+      }
     }
+  }
+
+  #loadAttachments(noteId: number): void {
+    this.loadingAttachments.set(true);
+    this.#attachmentService
+      .getByNoteId(noteId)
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: (items) => {
+          this.attachments.set(items);
+          this.loadingAttachments.set(false);
+        },
+        error: () => this.loadingAttachments.set(false),
+      });
+  }
+
+  deleteAttachment(id: number): void {
+    this.deletingAttachmentId.set(id);
+    this.#attachmentService
+      .delete(id)
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: () => {
+          this.attachments.update(list => list.filter(a => a.id !== id));
+          this.deletingAttachmentId.set(null);
+        },
+        error: () => this.deletingAttachmentId.set(null),
+      });
+  }
+
+  openExpandedImage(url: string): void {
+    this.expandedImageUrl.set(url);
+  }
+
+  closeExpandedImage(): void {
+    this.expandedImageUrl.set(null);
   }
 
   #snapshot(): EditorSnapshot {
@@ -82,13 +126,8 @@ export class NoteEditorComponent implements OnInit {
     }
   }
 
-  onTitleChange(value: string): void {
-    this.title.set(value);
-  }
-
-  onTitleBlur(): void {
-    this.#saveToHistoryIfChanged();
-  }
+  onTitleChange(value: string): void { this.title.set(value); }
+  onTitleBlur(): void { this.#saveToHistoryIfChanged(); }
 
   addItem(): void {
     this.#saveToHistoryIfChanged();
@@ -103,9 +142,7 @@ export class NoteEditorComponent implements OnInit {
   toggleItem(index: number): void {
     this.#saveToHistory();
     this.items.update(items =>
-      items.map((item, i) =>
-        i === index ? { ...item, checked: !item.checked } : item
-      )
+      items.map((item, i) => i === index ? { ...item, checked: !item.checked } : item)
     );
   }
 
@@ -115,9 +152,7 @@ export class NoteEditorComponent implements OnInit {
     );
   }
 
-  onItemBlur(): void {
-    this.#saveToHistoryIfChanged();
-  }
+  onItemBlur(): void { this.#saveToHistoryIfChanged(); }
 
   openAttachmentPicker(): void {
     this.attachmentInput?.nativeElement.click();
@@ -127,43 +162,28 @@ export class NoteEditorComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     this.attachmentFeedback.set(null);
+    if (!file) return;
 
-    if (!file) {
-      this.selectedAttachmentName.set(null);
-      return;
-    }
-
-    this.selectedAttachmentName.set(file.name);
-
-    const allowedTypes = [
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
-      'image/webp',
-    ];
-    const maxSize = 5 * 1024 * 1024;
-
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
-      this.#setAttachmentFeedback('Solo se permiten imagenes png, jpg, jpeg o webp.', true);
+      this.#setAttachmentFeedback('Solo se permiten imágenes png, jpg, jpeg o webp.', true);
       this.#resetAttachmentInput();
       return;
     }
-
-    if (file.size > maxSize) {
-      this.#setAttachmentFeedback('La imagen supera el limite de 5MB.', true);
+    if (file.size > 5 * 1024 * 1024) {
+      this.#setAttachmentFeedback('La imagen supera el límite de 5MB.', true);
       this.#resetAttachmentInput();
       return;
     }
 
     const noteId = this.note()?.id;
     if (!noteId) {
-      this.#setAttachmentFeedback('Guarda la nota primero para poder subir imagenes.', true);
+      this.#setAttachmentFeedback('Guarda la nota primero para poder subir imágenes.', true);
       this.#resetAttachmentInput();
       return;
     }
 
     this.uploadingAttachment.set(true);
-
     this.#attachmentService
       .save(file, noteId)
       .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -172,6 +192,8 @@ export class NoteEditorComponent implements OnInit {
           this.uploadingAttachment.set(false);
           this.#setAttachmentFeedback('Imagen subida correctamente.', false);
           this.#resetAttachmentInput();
+          this.#loadAttachments(noteId);
+          setTimeout(() => this.attachmentFeedback.set(null), 3000);
         },
         error: () => {
           this.uploadingAttachment.set(false);
@@ -187,11 +209,12 @@ export class NoteEditorComponent implements OnInit {
   }
 
   #resetAttachmentInput(): void {
-    this.attachmentInput?.nativeElement && (this.attachmentInput.nativeElement.value = '');
+    if (this.attachmentInput?.nativeElement)
+      this.attachmentInput.nativeElement.value = '';
   }
 
   undo(): void {
-    if (this.#history().length === 0) return;
+    if (!this.#history().length) return;
     const current = this.#snapshot();
     const prev = this.#history().at(-1)!;
     this.#future.update(f => [current, ...f]);
@@ -201,7 +224,7 @@ export class NoteEditorComponent implements OnInit {
   }
 
   redo(): void {
-    if (this.#future().length === 0) return;
+    if (!this.#future().length) return;
     const current = this.#snapshot();
     const next = this.#future()[0];
     this.#history.update(h => [...h, current]);
@@ -212,38 +235,31 @@ export class NoteEditorComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
+    // Cerrar imagen expandida con Escape
+    if (event.key === 'Escape' && this.expandedImageUrl()) {
+      this.closeExpandedImage();
+      return;
+    }
     const tag = (event.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-
     if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-      event.preventDefault();
-      this.undo();
+      event.preventDefault(); this.undo();
     }
-    if (
-      (event.ctrlKey || event.metaKey) &&
-      (event.key === 'y' || (event.key === 'z' && event.shiftKey))
-    ) {
-      event.preventDefault();
-      this.redo();
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+      event.preventDefault(); this.redo();
     }
   }
 
   onBackdropClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).dataset['backdrop'] === 'true') {
-      this.close();
-    }
+    if ((event.target as HTMLElement).dataset['backdrop'] === 'true') this.close();
   }
 
   close(): void {
     if (this.saving()) return;
-
     const title = this.title().trim();
     const items = this.items().filter(i => i.text.trim());
 
-    if (!title && items.length === 0) {
-      this.closed.emit();
-      return;
-    }
+    if (!title && items.length === 0) { this.closed.emit(); return; }
 
     const content: NoteContent = { type: 'list', items };
     const noteView: NoteView = {
@@ -254,19 +270,12 @@ export class NoteEditorComponent implements OnInit {
     };
 
     this.saving.set(true);
-
     this.#noteService
       .save(serializeNote(noteView))
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
-        next: (savedNote) => {
-          this.saved.emit(savedNote);
-          this.closed.emit();
-        },
-        error: () => {
-          this.saving.set(false);
-          this.closed.emit();
-        },
+        next: (savedNote) => { this.saved.emit(savedNote); this.closed.emit(); },
+        error: () => { this.saving.set(false); this.closed.emit(); },
       });
   }
 }
