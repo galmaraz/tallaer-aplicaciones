@@ -1,13 +1,22 @@
-import { Body, Controller, Param, ParseIntPipe, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
-import { AttachmentService } from "./attachment.service";
-import { FileInterceptor } from "@nestjs/platform-express";
+import {
+    Body,
+    Controller,
+    MaxFileSizeValidator,
+    Param,
+    ParseFilePipe,
+    ParseIntPipe,
+    Post,
+    FileTypeValidator,
+    UploadedFile,
+    UseInterceptors,
+} from '@nestjs/common';
+import { AttachmentService } from './attachment.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('attachment')
 // @UseGuards(AuthGuard('jwt'))
 export class AttachmentController {
-    constructor(
-        private readonly service: AttachmentService
-    ) {}
+    constructor(private readonly service: AttachmentService) {}
 
     @Post('getall')
     getAll() {
@@ -22,7 +31,15 @@ export class AttachmentController {
     @Post('save')
     @UseInterceptors(FileInterceptor('file'))
     async save(
-        @UploadedFile() file: Express.Multer.File,
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+                    new FileTypeValidator({ fileType: /^(image\/png|image\/jpe?g|image\/webp)$/i }),
+                ],
+            }),
+        )
+        file: Express.Multer.File,
         @Body('note_id', ParseIntPipe) noteId: number,
     ) {
         return await this.service.save(file, noteId);

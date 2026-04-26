@@ -45,6 +45,17 @@ export class AttachmentService {
         'El archivo no contiene buffer. Verifica memoryStorage en el interceptor',
       );
 
+    const validImageTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+    if (!validImageTypes.includes(data.mimetype.toLowerCase()))
+      throw new BadRequestException(
+        'Solo se permiten archivos de imagen (png, jpg, jpeg, webp)',
+      );
+
     const note = await this.noteRepository.findOne({ where: { id: entityId } });
     if (!note)
       throw new NotFoundException(`No existe una nota con id ${entityId}`);
