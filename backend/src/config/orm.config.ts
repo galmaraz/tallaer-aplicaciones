@@ -3,6 +3,7 @@ import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { Note } from "src/note/model/note.model";
 import { Noteshare } from "src/noteshare/model/noteshare.model";
 import { Usuario } from "src/usuario/model/usuario.model";
+import { Recordatorio } from "src/recordatorio/model/recordatorio.model";
 
 
 export default registerAs(
@@ -15,7 +16,7 @@ export default registerAs(
         username: 'postgres',
         password: '1234',
         database: 'db',
-        entities: [Usuario, Noteshare, Note, Noteshare],
+        entities: [Usuario, Noteshare, Note, Noteshare, Recordatorio],
         synchronize: true,
         */
          type: 'postgres',
@@ -24,7 +25,7 @@ export default registerAs(
         username: 'sa',
         password: '123',
         database: 'postgres',
-        entities: [Usuario, Noteshare, Note, Noteshare],
+        entities: [Usuario, Noteshare, Note, Recordatorio],
         synchronize: true,
     }),
 );
