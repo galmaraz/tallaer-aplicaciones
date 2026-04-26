@@ -10,7 +10,7 @@ import { Attachment } from "src/attachment/model/attachment.model";
 export default registerAs(
     'orm.config',
     (): TypeOrmModuleOptions => ({
-        /*
+        
         type: 'postgres',
         host: '127.0.0.1',
         port: 5432,
@@ -19,14 +19,14 @@ export default registerAs(
         database: 'db',
         entities: [Usuario, Noteshare, Note, Noteshare, Recordatorio],
         synchronize: true,
-        */
-         type: 'postgres',
-        host: '127.0.0.1',
-        port: 5432,
-        username: 'sa',
-        password: '1844',
-        database: 'googlekeep-db',
-        entities: [Usuario, Noteshare, Note, Recordatorio, Attachment],
-        synchronize: true,
+        
+        //  type: 'postgres',
+        // host: '127.0.0.1',
+        // port: 5432,
+        // username: 'sa',
+        // password: '1844',
+        // database: 'googlekeep-db',
+        // entities: [Usuario, Noteshare, Note, Recordatorio, Attachment],
+        // synchronize: true,
     }),
 );

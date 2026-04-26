@@ -1,0 +1,74 @@
+<article
+  (click)="editarRecordatorio()"
+  class="group relative overflow-hidden rounded-3xl cursor-pointer
+         bg-white/[0.07] border border-white/[0.14]
+         backdrop-blur-3xl backdrop-saturate-150
+         shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_14px_42px_rgba(0,0,0,0.35)]
+         hover:bg-white/[0.09] hover:border-purple-300/35 hover:-translate-y-0.5
+         transition-all duration-300">
+
+  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent"></div>
+
+  <div class="p-5">
+    <div class="flex items-start gap-3">
+      <button
+        (click)="completarRecordatorio($event)"
+        class="mt-0.5 shrink-0 w-6 h-6 rounded-lg border flex items-center justify-center transition-all"
+        [class]="recordatorio().completado
+          ? 'bg-gradient-to-br from-purple-400 to-purple-600 border-transparent shadow-[0_2px_10px_rgba(139,92,246,0.45)]'
+          : 'border-white/25 bg-white/[0.04] hover:border-purple-400/70'">
+        @if (recordatorio().completado) {
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        }
+      </button>
+
+      <div class="min-w-0 flex-1">
+        <h3 class="font-semibold text-base leading-snug transition-colors"
+          [class]="recordatorio().completado ? 'text-white/35 line-through' : 'text-white/90'">
+          {{ recordatorio().titulo }}
+        </h3>
+
+        @if (recordatorio().descripcion) {
+          <p class="mt-2 text-sm leading-relaxed"
+            [class]="recordatorio().completado ? 'text-white/25 line-through' : 'text-white/55'">
+            {{ recordatorio().descripcion }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="mt-5 flex items-center justify-between gap-3">
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border"
+        [class]="estaVencido()
+          ? 'bg-red-500/10 border-red-400/25 text-red-300'
+          : recordatorio().completado
+            ? 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300/70'
+            : 'bg-purple-500/10 border-purple-400/25 text-purple-200/80'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        {{ recordatorio().fechaRecordatorio | date:'dd/MM/yyyy HH:mm' }}
+      </span>
+
+      <button
+        (click)="eliminarRecordatorio($event)"
+        title="Eliminar recordatorio"
+        class="p-2 rounded-xl text-white/30 hover:text-red-300 hover:bg-red-500/[0.10]
+               opacity-0 group-hover:opacity-100 transition-all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18" />
+          <path d="M8 6V4h8v2" />
+          <path d="M19 6l-1 14H6L5 6" />
+          <path d="M10 11v6" />
+          <path d="M14 11v6" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</article>
