@@ -22,11 +22,13 @@ import {
 import { NoteService } from '../../services/note.service';
 import { AttachmentService } from '../../services/attachment.service';
 import { AttachmentView } from '../../models/attachment.model';
+import { NoteShareService } from '../../services/note-share.service';
+import { UserSelectorComponent } from '../usuario-selector/user-selector.component';
 
 @Component({
   selector: 'app-note-editor',
   standalone: true,
-  imports: [],
+  imports: [UserSelectorComponent],
   templateUrl: './note-editor.component.html',
 })
 export class NoteEditorComponent implements OnInit {
@@ -41,6 +43,10 @@ export class NoteEditorComponent implements OnInit {
   #attachmentService = inject(AttachmentService);
   #destroyRef = inject(DestroyRef);
 
+  #noteShareService = inject(NoteShareService);
+  showShareModal = signal(false);
+  sharing = signal(false);
+
   title = signal('');
   items = signal<NoteItem[]>([]);
   saving = signal(false);
@@ -52,6 +58,8 @@ export class NoteEditorComponent implements OnInit {
   loadingAttachments = signal(false);
   deletingAttachmentId = signal<number | null>(null);
   expandedImageUrl = signal<string | null>(null); // para ver imagen en grande
+  showToast = signal(false);
+  
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -128,6 +136,34 @@ export class NoteEditorComponent implements OnInit {
 
   onTitleChange(value: string): void { this.title.set(value); }
   onTitleBlur(): void { this.#saveToHistoryIfChanged(); }
+  
+
+
+  onShareIconClick() {
+    this.showShareModal.set(true);
+  }
+
+
+  confirmarCompartir(idUsuarioDestino: number) {
+  const notaActual = this.note();
+  
+  if (notaActual?.id) {
+    this.sharing.set(true);
+    this.#noteShareService.compartir(notaActual.id, idUsuarioDestino).subscribe({
+      next: () => {
+        this.sharing.set(false);
+        this.showShareModal.set(false); 
+        this.showToast.set(true); 
+      
+        setTimeout(() => this.showToast.set(false), 3000);
+      },
+      error: () => {
+        this.sharing.set(false);
+      }
+    });
+  }
+}
+
 
   addItem(): void {
     this.#saveToHistoryIfChanged();
