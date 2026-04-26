@@ -136,9 +136,7 @@ export class NoteEditorComponent implements OnInit {
 
   onTitleChange(value: string): void { this.title.set(value); }
   onTitleBlur(): void { this.#saveToHistoryIfChanged(); }
-  onTitleChange(value: string): void {
-    this.title.set(value);
-  }
+  
 
 
   onShareIconClick() {
@@ -166,9 +164,6 @@ export class NoteEditorComponent implements OnInit {
   }
 }
 
-  onTitleBlur(): void {
-    this.#saveToHistoryIfChanged();
-  }
 
   addItem(): void {
     this.#saveToHistoryIfChanged();
