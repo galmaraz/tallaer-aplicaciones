@@ -28,6 +28,11 @@ export class AttachmentController {
         return this.service.getById(id);
     }
 
+    @Post('getbynote/:noteId')
+    getByNote(@Param('noteId', ParseIntPipe) noteId: number) {
+        return this.service.getByNoteId(noteId);
+    }
+
     @Post('save')
     @UseInterceptors(FileInterceptor('file'))
     async save(

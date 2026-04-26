@@ -69,6 +69,18 @@ export class AttachmentService {
     return await this.repository.save(attachment);
   }
 
+ async getByNoteId(noteId: number) {
+  const note = await this.noteRepository.findOne({ where: { id: noteId } });
+  if (!note)
+    throw new NotFoundException(`No existe una nota con id ${noteId}`);
+
+  return await this.repository.find({
+    where: { note: { id: noteId } },
+    select: ['id', 'filename', 'filetype', 'filesize', 'filedata'],
+  });
+ }
+
+
   async delete(id: number) {
     const attachment = await this.findById(id);
     await this.repository.delete({ id });
