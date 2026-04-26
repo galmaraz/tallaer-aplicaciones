@@ -14,11 +14,11 @@ export const HOME_ROUTES: Routes = [
         component: MainDashboardComponent,   // ← vista por defecto
       },
       {
-  path: 'recordatorios',
-  loadComponent: () =>
-    import('../recordatorio/pages/recordatorio-page/recordatorio-page.component')
-      .then(m => m.RecordatorioPageComponent),
-},
+        path: 'recordatorios',
+        loadComponent: () =>
+         import('../recordatorio/pages/recordatorios/recordatorios.component')
+          .then(m => m.RecordatoriosComponent),
+      },
       // {
       //   path: 'archivados',
       //   loadComponent: () =>
