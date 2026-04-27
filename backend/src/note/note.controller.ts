@@ -11,6 +11,11 @@ export class NoteController {
     return this.service.getAllForUser(userId);
   }
 
+  @Post('gettrash')
+  getTrash() {
+    return this.service.getTrash();
+  }
+
   @Post('getbyid/:id')
   getById(@Param('id', ParseIntPipe) id: number) {
     return this.service.getById(id);
@@ -19,6 +24,16 @@ export class NoteController {
   @Post('save')
   async save(@Body() data: NoteDto) {
     return await this.service.save(data);
+  }
+
+  @Post('softdelete/:id')
+  async softDelete(@Param('id', ParseIntPipe) id: number) {
+    return await this.service.softDelete(id);
+  }
+
+  @Post('restore/:id')
+  async restore(@Param('id', ParseIntPipe) id: number) {
+    return await this.service.restore(id);
   }
 
   @Post('delete/:id')

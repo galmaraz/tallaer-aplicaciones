@@ -15,6 +15,12 @@ export class NoteService {
       .pipe(map(notes => notes.map(parseNoteView)));
   }
 
+  getTrash(): Observable<NoteView[]> {
+    return this.http
+      .post<NoteRaw[]>(`${this.apiUrl}/gettrash`, {})
+      .pipe(map(notes => notes.map(parseNoteView)));
+  }
+
   getById(id: number): Observable<NoteView> {
     return this.http
       .post<NoteRaw>(`${this.apiUrl}/getbyid/${id}`, {})
@@ -24,6 +30,18 @@ export class NoteService {
   save(data: NoteRaw): Observable<NoteView> {
     return this.http
       .post<NoteRaw>(`${this.apiUrl}/save`, data)
+      .pipe(map(parseNoteView));
+  }
+
+  softDelete(id: number): Observable<NoteView> {
+    return this.http
+      .post<NoteRaw>(`${this.apiUrl}/softdelete/${id}`, {})
+      .pipe(map(parseNoteView));
+  }
+
+  restore(id: number): Observable<NoteView> {
+    return this.http
+      .post<NoteRaw>(`${this.apiUrl}/restore/${id}`, {})
       .pipe(map(parseNoteView));
   }
 

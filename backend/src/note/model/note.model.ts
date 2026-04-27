@@ -13,9 +13,11 @@ export class Note {
   @Column()
   content: string;
 
-  @Column()
-  @IsBoolean()
-  activo: boolean;
+  @Column({ default: true })
+  activo!: boolean;
+
+  @Column({ default: false })
+  deleted!: boolean;
 
   @ManyToOne(() => Usuario, data => data.id)
   @JoinColumn({ name: 'usuario_id' })

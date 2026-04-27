@@ -1,5 +1,5 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { NoteView } from '../../../note/models/note.model';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { NoteView, serializeNote } from '../../../note/models/note.model';
 import { NoteService } from '../../../note/services/note.service';
 import { NoteFilterService } from '../../../note/services/note-filter.service';
 import { NoteEditorComponent } from '../../../note/components/note-editor/note-editor.component';
@@ -19,7 +19,7 @@ const byNewest = (a: NoteView, b: NoteView): number =>
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css',
 })
-export class MainDashboardComponent {
+export class MainDashboardComponent implements OnInit {
   #noteService = inject(NoteService);
   #filterService = inject(NoteFilterService);
   #currentUser = inject(CurrentUserService)
@@ -29,6 +29,7 @@ export class MainDashboardComponent {
   error = signal<string | null>(null);
   editorOpen = signal(false);
   selectedNote = signal<NoteView | null>(null);
+  newNoteType = signal<'text' | 'list'>('text');
   viewMode = signal<ViewMode>('grid');
   openWithImagePicker = signal(false);
   sharingNote = signal<NoteView | null>(null);
@@ -60,7 +61,6 @@ export class MainDashboardComponent {
     }, { allowSignalWrites: true });
   }
 
-  // skeleton
   #loadNotes(userId: number): void {
     this.loading.set(true);
     this.error.set(null);
@@ -70,7 +70,6 @@ export class MainDashboardComponent {
     });
   }
 
-  // Refresco silencioso sin skeleton
   #refreshNotes(): void {
     const userId = this.#currentUser.currentUserId();
     if (userId === null) return;
@@ -83,28 +82,33 @@ export class MainDashboardComponent {
     this.viewMode.update(v => (v === 'grid' ? 'list' : 'grid'));
   }
 
-  openNewNote(): void {
-  this.#savedDuringSession = false;
-  this.selectedNote.set(null);
-  this.openWithImagePicker.set(false);
-  this.editorOpen.set(true);
-}
-
-  openNewNoteWithImage(): void {
-  this.#savedDuringSession = false;
-  this.selectedNote.set(null);
-  this.openWithImagePicker.set(true);
-  this.editorOpen.set(true);
-}
+  openNewNote(type: 'text' | 'list' = 'text'): void {
+    this.#savedDuringSession = false;
+    this.selectedNote.set(null);
+    this.newNoteType.set(type);
+    this.openWithImagePicker.set(false);
+    this.editorOpen.set(true);
+  }
 
   openNote(note: NoteView): void {
-    this.#savedDuringSession = false;
     this.selectedNote.set(note);
     this.editorOpen.set(true);
   }
 
-  onNoteSaved(_savedNote: NoteView): void {
-    this.#savedDuringSession = true;
+  onNoteSaved(savedNote: NoteView): void {
+    if (!savedNote?.id) {
+      this.#refreshNotes();
+      return;
+    }
+    this.notes.update(current => {
+      const idx = current.findIndex(n => n.id === savedNote.id);
+      if (idx >= 0) {
+        const copy = [...current];
+        copy[idx] = savedNote;
+        return copy;
+      }
+      return [savedNote, ...current];
+    });
   }
 
   onEditorClosed(): void {
@@ -117,13 +121,31 @@ export class MainDashboardComponent {
   }
 }
 
-  deleteNote(id: number): void {
-    // Optimistic: quitar de la UI inmediatamente
+  softDeleteNote(id: number): void {
     this.notes.update(notes => notes.filter(n => n.id !== id));
-    this.#noteService.delete(id).subscribe({
-      // Re-fetch silencioso para confirmar el estado real del backend
-      next: () => this.#refreshNotes(),
-      // Si falla, restaurar la lista desde el backend
+    this.#noteService.softDelete(id).subscribe({
+      error: () => this.#refreshNotes(),
+    });
+  }
+
+  onEditorSoftDelete(id: number): void {
+    this.editorOpen.set(false);
+    this.selectedNote.set(null);
+    this.softDeleteNote(id);
+  }
+
+  duplicateNote(note: NoteView): void {
+    const copy: NoteView = {
+      title: `Copia de ${note.title}`,
+      content: {
+        type: note.content.type,
+        body: note.content.body,
+        items: note.content.items?.map(i => ({ ...i })),
+      },
+      activo: true,
+    };
+    this.#noteService.save(serializeNote(copy)).subscribe({
+      next: (saved) => this.notes.update(current => [saved, ...current]),
       error: () => this.#refreshNotes(),
     });
   }
@@ -135,5 +157,11 @@ export class MainDashboardComponent {
   onShareDialogClosed(): void {
     this.sharingNote.set(null);
     this.#refreshNotes();
+  }
+
+  onEditorDuplicate(note: NoteView): void {
+    this.editorOpen.set(false);
+    this.selectedNote.set(null);
+    this.duplicateNote(note);
   }
 }

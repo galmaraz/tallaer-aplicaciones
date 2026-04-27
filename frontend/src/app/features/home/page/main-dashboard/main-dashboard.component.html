@@ -1,20 +1,20 @@
 <!-- CREAR NOTA -->
 <div class="max-w-3xl mx-auto mb-12">
-  <div class="w-full group flex items-center gap-3 px-6 py-4 rounded-full
+  <div class="flex items-center gap-3 px-6 py-4 rounded-full
               bg-white/[0.06] border border-white/[0.14]
               backdrop-blur-3xl backdrop-saturate-150
               shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_12px_40px_rgba(0,0,0,0.35)]
               hover:bg-white/[0.08] hover:border-white/[0.20]
               hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_2px_0_rgba(0,0,0,0.15),0_16px_48px_rgba(139,92,246,0.15)]
               transition-all duration-500">
-
-    <!-- Texto clickeable para abrir editor normal -->
-    <button (click)="openNewNote()" class="flex-1 text-left text-white/40 text-base">
+    <!-- Área de texto → abre nota tipo texto -->
+    <button (click)="openNewNote('text')"
+      class="flex-1 text-left text-white/40 text-base hover:text-white/60 transition-colors">
       Crear una nota...
     </button>
-
-    <!-- Botón lista (ya existía) -->
-    <button (click)="openNewNote()" title="Nueva nota de lista"
+    <!-- Ícono lista → abre nota tipo checklist -->
+    <button (click)="openNewNote('list')"
+      title="Nueva lista de verificación"
       class="p-2 rounded-lg text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -106,7 +106,7 @@
   </div>
 }
 
-<!-- BÚSQUEDA NOTAS -->
+<!-- BÚSQUEDA SIN RESULTADOS -->
 @else if (filteredNotes().length === 0 && isSearching()) {
   <div class="flex flex-col items-center justify-center py-24 text-center">
     <div class="w-14 h-14 mb-6 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center">
@@ -140,8 +140,12 @@
   <div class="columns-1 md:columns-2 lg:columns-3 gap-5">
     @for (note of filteredNotes(); track note.id; let i = $index) {
       <div class="break-inside-avoid mb-5 note-enter" [style.animation-delay]="(i * 45) + 'ms'">
-        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)"
-          (shareNote)="onShareNote($event)" />
+        <app-note-card
+          [note]="note"
+          (editNote)="openNote($event)"
+          (softDeleteNote)="softDeleteNote($event)"
+          (shareNote)="onShareNote($event)"
+          (duplicateNote)="duplicateNote($event)" />
       </div>
     }
   </div>
@@ -151,7 +155,11 @@
   <div class="flex flex-col gap-4 max-w-2xl mx-auto">
     @for (note of filteredNotes(); track note.id; let i = $index) {
       <div class="note-enter" [style.animation-delay]="(i * 40) + 'ms'">
-        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" />
+        <app-note-card
+          [note]="note"
+          (editNote)="openNote($event)"
+          (softDeleteNote)="softDeleteNote($event)"
+          (duplicateNote)="duplicateNote($event)" />
       </div>
     }
   </div>
@@ -160,12 +168,19 @@
 @if (editorOpen()) {
   <app-note-editor
     [note]="selectedNote()"
+    [initialType]="newNoteType()"
     [autoOpenImagePicker]="openWithImagePicker()"
     (saved)="onNoteSaved($event)"
-    (closed)="onEditorClosed()" />
+    (closed)="onEditorClosed()"
+    (softDeleteRequested)="onEditorSoftDelete($event)"
+    (duplicateRequested)="onEditorDuplicate($event)" />
 }
 @if (sharingNote(); as sharing) {
 @if (sharing.id) {
+@if (sharingNote(); as sharing) {
+@if (sharing.id) {
 <app-share-dialog [noteId]="sharing.id" [noteOwner]="sharing.usuario ?? null" (closed)="onShareDialogClosed()" />
+}
+}
 }
 }

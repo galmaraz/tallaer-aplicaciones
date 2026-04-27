@@ -16,7 +16,7 @@ export class NoteService {
 
   async getAllForUser(userId: number) {
     const ownNotes = await this.repository.find({
-      where: { usuario_id: userId, activo: true },
+      where: { usuario_id: userId, activo: true, deleted: false },
       relations: { usuario: true },
       order: { updated_at: 'DESC' },
     });
@@ -71,5 +71,18 @@ export class NoteService {
     if (!note) throw new Error(`Nota con id ${id} no encontrada`);
     await this.repository.delete({ id });
     return 'Se elimino correctamente!!!';
+  }
+
+  async findById(id: number) {
+    const entity = await this.repository.findOne({
+      where: { id },
+    });
+
+    if (!entity) throw new Error(`Entidad con id ${id} no encontrado`);
+
+    return entity;
+  }
+  getTrash() {
+    return this.repository.find({ where: { deleted: true } });
   }
 }

@@ -36,8 +36,11 @@ import { NoteShareRole } from '../../../note-share/models/noteshare-role.enum';
 })
 export class NoteEditorComponent implements OnInit {
   note = input<NoteView | null>(null);
+  initialType = input<'text' | 'list'>('list');
   saved = output<NoteView>();
   closed = output<void>();
+  softDeleteRequested = output<number>();
+  duplicateRequested = output<NoteView>();
   autoOpenImagePicker = input(false);
 
   @ViewChild('attachmentInput')
@@ -50,11 +53,14 @@ export class NoteEditorComponent implements OnInit {
   #destroyRef = inject(DestroyRef);
 
   title = signal('');
+  noteType = signal<'text' | 'list'>('list');
+  textBody = signal('');
   items = signal<NoteItem[]>([]);
   saving = signal(false);
   uploadingAttachment = signal(false);
   attachmentFeedback = signal<string | null>(null);
   attachmentFeedbackIsError = signal(false);
+  moreMenuOpen = signal(false);
 
   shareDialogOpen = signal(false);
   collaborators = signal<NoteShare[]>([]);
@@ -63,6 +69,9 @@ export class NoteEditorComponent implements OnInit {
   loadingAttachments = signal(false);
   deletingAttachmentId = signal<number | null>(null);
   expandedImageUrl = signal<string | null>(null);
+
+  draggedIndex = signal<number | null>(null);
+  dragOverIndex = signal<number | null>(null);
 
   #history = signal<EditorSnapshot[]>([]);
   #future = signal<EditorSnapshot[]>([]);
@@ -87,12 +96,20 @@ export class NoteEditorComponent implements OnInit {
     if (note) {
       this.title.set(note.title);
       if (note.content.type === 'list') {
+        this.noteType.set('list');
         this.items.set(note.content.items?.map(i => ({ ...i })) ?? []);
+      } else {
+        this.noteType.set('text');
+        this.textBody.set(note.content.body ?? '');
       }
       if (note.id) {
         this.#loadAttachments(note.id);
         this.#loadCollaborators(note.id);
       }
+    }  else {
+      this.noteType.set(this.initialType());
+    if (this.autoOpenImagePicker()) {
+      setTimeout(() => this.openAttachmentPicker(), 150);
     }
     if (this.autoOpenImagePicker()) {
       setTimeout(() => this.openAttachmentPicker(), 150);
@@ -137,16 +154,16 @@ export class NoteEditorComponent implements OnInit {
       });
   }
 
-  openExpandedImage(url: string): void {
-    this.expandedImageUrl.set(url);
-  }
-
-  closeExpandedImage(): void {
-    this.expandedImageUrl.set(null);
-  }
+  openExpandedImage(url: string): void { this.expandedImageUrl.set(url); }
+  closeExpandedImage(): void { this.expandedImageUrl.set(null); }
 
   #snapshot(): EditorSnapshot {
-    return { title: this.title(), items: this.items().map(i => ({ ...i })) };
+    return {
+      title: this.title(),
+      noteType: this.noteType(),
+      items: this.items().map(i => ({ ...i })),
+      textBody: this.textBody(),
+    };
   }
 
   #saveToHistory(): void {
@@ -163,8 +180,17 @@ export class NoteEditorComponent implements OnInit {
     }
   }
 
+  setNoteType(type: 'text' | 'list'): void {
+    if (this.noteType() === type) return;
+    this.#saveToHistory();
+    this.noteType.set(type);
+  }
+
   onTitleChange(value: string): void { this.title.set(value); }
   onTitleBlur(): void { this.#saveToHistoryIfChanged(); }
+
+  onTextBodyChange(value: string): void { this.textBody.set(value); }
+  onTextBodyBlur(): void { this.#saveToHistoryIfChanged(); }
 
   openShareDialog(): void {
     if (!this.noteId()) return;
@@ -203,6 +229,79 @@ export class NoteEditorComponent implements OnInit {
   }
 
   onItemBlur(): void { this.#saveToHistoryIfChanged(); }
+
+  onDragStart(event: DragEvent, index: number): void {
+    this.draggedIndex.set(index);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(index));
+    }
+  }
+
+  onDragOver(event: DragEvent, index: number): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dragOverIndex.set(index);
+  }
+
+  onDragLeave(): void { this.dragOverIndex.set(null); }
+
+  onDrop(event: DragEvent, targetIndex: number): void {
+    event.preventDefault();
+    const sourceIndex = this.draggedIndex();
+    this.draggedIndex.set(null);
+    this.dragOverIndex.set(null);
+    if (sourceIndex === null || sourceIndex === targetIndex) return;
+    this.#saveToHistory();
+    this.items.update(arr => {
+      const copy = [...arr];
+      const [moved] = copy.splice(sourceIndex, 1);
+      copy.splice(targetIndex, 0, moved);
+      return copy;
+    });
+  }
+
+  onDragEnd(): void {
+    this.draggedIndex.set(null);
+    this.dragOverIndex.set(null);
+  }
+
+  toggleMoreMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.moreMenuOpen.update(v => !v);
+  }
+
+  requestSoftDelete(event: MouseEvent): void {
+    event.stopPropagation();
+    this.moreMenuOpen.set(false);
+    const id = this.note()?.id;
+    if (id !== undefined) {
+      this.softDeleteRequested.emit(id);
+      this.closed.emit();
+    }
+  }
+
+  requestDuplicate(event: MouseEvent): void {
+    event.stopPropagation();
+    this.moreMenuOpen.set(false);
+    const currentNote = this.note();
+    if (!currentNote) return;
+
+    let content: NoteContent;
+    if (this.noteType() === 'text') {
+      content = { type: 'text', body: this.textBody().trim() };
+    } else {
+      content = { type: 'list', items: this.items().filter(i => i.text.trim()) };
+    }
+
+    const snapshot: NoteView = {
+      title: this.title().trim() || 'Sin título',
+      content,
+      activo: true,
+    };
+    this.duplicateRequested.emit(snapshot);
+    this.closed.emit();
+  }
 
   openAttachmentPicker(): void {
     this.attachmentInput?.nativeElement.click();
@@ -302,7 +401,9 @@ export class NoteEditorComponent implements OnInit {
     this.#future.update(f => [current, ...f]);
     this.#history.update(h => h.slice(0, -1));
     this.title.set(prev.title);
+    this.noteType.set(prev.noteType);
     this.items.set(prev.items.map(i => ({ ...i })));
+    this.textBody.set(prev.textBody);
   }
 
   redo(): void {
@@ -312,7 +413,9 @@ export class NoteEditorComponent implements OnInit {
     this.#history.update(h => [...h, current]);
     this.#future.update(f => f.slice(1));
     this.title.set(next.title);
+    this.noteType.set(next.noteType);
     this.items.set(next.items.map(i => ({ ...i })));
+    this.textBody.set(next.textBody);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -333,6 +436,11 @@ export class NoteEditorComponent implements OnInit {
     }
   }
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.moreMenuOpen()) this.moreMenuOpen.set(false);
+  }
+
   onBackdropClick(event: MouseEvent): void {
     if ((event.target as HTMLElement).dataset['backdrop'] === 'true') this.close();
   }
@@ -344,9 +452,21 @@ export class NoteEditorComponent implements OnInit {
     }
     if (this.saving()) return;
     const title = this.title().trim();
-    const items = this.items().filter(i => i.text.trim());
 
-    if (!title && items.length === 0) {
+    let content: NoteContent;
+    let isEmpty: boolean;
+
+    if (this.noteType() === 'text') {
+      const body = this.textBody().trim();
+      isEmpty = !title && !body;
+      content = { type: 'text', body };
+    } else {
+      const items = this.items().filter(i => i.text.trim());
+      isEmpty = !title && items.length === 0;
+      content = { type: 'list', items };
+    }
+
+    if (isEmpty) {
       this.closed.emit();
       return;
     }

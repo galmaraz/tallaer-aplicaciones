@@ -25,12 +25,12 @@ export const HOME_ROUTES: Routes = [
       //     import('../../archived/pages/archived.component')
       //       .then(m => m.ArchivedComponent),
       // },
-      // {
-      //   path: 'papelera',
-      //   loadComponent: () =>
-      //     import('../../trash/pages/trash.component')
-      //       .then(m => m.TrashComponent),
-      // },
+      {
+        path: 'papelera',
+        loadComponent: () =>
+          import( '../trash/pages/trash.component' )
+          .then(m => m.TrashComponent),
+       },
       // {
       //   path: 'nota/:id',
       //   loadComponent: () =>

@@ -2,19 +2,19 @@
   (click)="onBackdropClick($event)">
 
   @if (expandedImageUrl()) {
-  <div class="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-md"
-    (click)="closeExpandedImage()">
-    <img [src]="expandedImageUrl()!" alt="Imagen ampliada" class="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-2xl object-contain
-                 ring-1 ring-white/10" />
-    <button (click)="closeExpandedImage()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80
-                 flex items-center justify-center text-white/70 hover:text-white transition-all">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6 6 18" />
-        <path d="m6 6 12 12" />
-      </svg>
-    </button>
-  </div>
+    <div class="absolute inset-0 z-10 flex items-center justify-center bg-black/80 backdrop-blur-md"
+      (click)="closeExpandedImage()">
+      <img [src]="expandedImageUrl()!" alt="Imagen ampliada"
+        class="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-2xl object-contain ring-1 ring-white/10" />
+      <button (click)="closeExpandedImage()"
+        class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80
+               flex items-center justify-center text-white/70 hover:text-white transition-all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+        </svg>
+      </button>
+    </div>
   }
 
   <div
@@ -50,7 +50,34 @@
         </button>
       </div>
 
-      <button (click)="close()" [disabled]="saving()" title="Cerrar" class="p-2 rounded-xl transition-all"
+      <!-- Toggle tipo: Texto / Lista -->
+      <div class="flex items-center gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/[0.09]">
+        <button (click)="setNoteType('text')" title="Nota de texto"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+          [class]="noteType() === 'text'
+            ? 'bg-purple-500/30 text-purple-200 border border-purple-400/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]'
+            : 'text-white/35 hover:text-white/65'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h12" />
+          </svg>
+          Texto
+        </button>
+        <button (click)="setNoteType('list')" title="Lista de verificación"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+          [class]="noteType() === 'list'
+            ? 'bg-purple-500/30 text-purple-200 border border-purple-400/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]'
+            : 'text-white/35 hover:text-white/65'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" /><path d="m9 12 2 2 4-4" />
+          </svg>
+          Lista
+        </button>
+      </div>
+
+      <button (click)="close()" [disabled]="saving()" title="Cerrar"
+        class="p-2 rounded-xl transition-all"
         [class]="saving() ? 'text-white/20 cursor-not-allowed' : 'text-white/50 hover:text-white hover:bg-white/[0.08]'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
@@ -110,63 +137,122 @@
         </div>
         }
 
-        <div
-          class="absolute inset-0 bg-black/0 group-hover/img:bg-black/35 transition-all duration-200 pointer-events-none">
-        </div>
+            <div class="absolute inset-0 bg-black/0 group-hover/img:bg-black/35 transition-all duration-200 pointer-events-none"></div>
 
-        @if (!isReadOnly()) {
-        <button (click)="$event.stopPropagation(); deleteAttachment(att.id)"
-          [disabled]="deletingAttachmentId() === att.id"
-          class="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 hover:bg-red-500/80 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all duration-200 text-white/80 hover:text-white shadow-lg">
-          @if (deletingAttachmentId() === att.id) {
-          <svg class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2.5">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-          } @else {
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-          }
-        </button>
+            <button
+              (click)="$event.stopPropagation(); deleteAttachment(att.id)"
+              [disabled]="deletingAttachmentId() === att.id"
+              class="absolute top-1.5 right-1.5 w-7 h-7 rounded-full
+                     bg-black/55 hover:bg-red-500/80
+                     flex items-center justify-center
+                     opacity-0 group-hover/img:opacity-100
+                     transition-all duration-200 text-white/80 hover:text-white shadow-lg"
+              title="Eliminar imagen">
+              @if (deletingAttachmentId() === att.id) {
+                <svg class="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              } @else {
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                </svg>
+              }
+            </button>
+
+            <div class="absolute inset-x-0 bottom-0 px-2.5 py-1.5
+                        bg-gradient-to-t from-black/65 to-transparent
+                        opacity-0 group-hover/img:opacity-100 transition-all duration-200 pointer-events-none">
+              <p class="text-[10px] text-white/75 truncate">{{ att.filename }}</p>
+            </div>
+          </div>
         }
       </div>
-      }
-    </div>
     }
 
-    <div class="px-5 pt-3 max-h-64 overflow-y-auto space-y-1">
-      @for (item of items(); track $index) {
-      <div class="flex items-center gap-3 py-1 group/item">
-        <button (click)="toggleItem($index)" [disabled]="isReadOnly()"
-          class="shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all"
-          [class]="item.checked ? 'bg-gradient-to-br from-purple-400 to-purple-600 border-transparent shadow-[0_2px_8px_rgba(139,92,246,0.4)]' : 'border-white/25 bg-white/[0.03] hover:border-purple-400/60'">
-          @if (item.checked) {
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          }
-        </button>
-        <input type="text" placeholder="Elemento de la lista..." autocomplete="off" [value]="item.text"
-          [readonly]="isReadOnly()" (input)="updateItemText($index, $any($event.target).value)" (blur)="onItemBlur()"
-          class="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-white/25 transition-colors"
-          [class]="item.checked ? 'text-white/35 line-through' : 'text-white/85'" />
-        @if (!isReadOnly()) {
-        <button (click)="removeItem($index)"
-          class="shrink-0 p-1 rounded-lg transition-all opacity-0 group-hover/item:opacity-100 text-white/40 hover:text-white/80 hover:bg-white/[0.08]">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
+    <!-- ── MODO TEXTO: Textarea ── -->
+    @if (noteType() === 'text') {
+      <div class="px-5 pt-3 pb-1">
+        <textarea
+          placeholder="Escribe tu nota aquí..."
+          rows="6"
+          autocomplete="off"
+          [value]="textBody()"
+          (input)="onTextBodyChange($any($event.target).value)"
+          (blur)="onTextBodyBlur()"
+          class="w-full bg-transparent text-white/85 text-sm leading-relaxed resize-none
+                 placeholder:text-white/25 focus:outline-none">
+        </textarea>
+      </div>
+    }
+
+    <!-- ── MODO LISTA: elementos con Drag Handle ── -->
+    @if (noteType() === 'list') {
+      <div class="px-5 pt-3 max-h-64 overflow-y-auto space-y-0.5">
+        @for (item of items(); track $index; let i = $index) {
+          <div
+            draggable="true"
+            (dragstart)="onDragStart($event, i)"
+            (dragover)="onDragOver($event, i)"
+            (dragleave)="onDragLeave()"
+            (drop)="onDrop($event, i)"
+            (dragend)="onDragEnd()"
+            class="flex items-center gap-2 py-1.5 rounded-xl px-2 group/item transition-colors"
+            [class]="dragOverIndex() === i && draggedIndex() !== i
+              ? 'bg-purple-500/[0.12] border border-purple-400/30'
+              : draggedIndex() === i
+                ? 'opacity-40'
+                : 'hover:bg-white/[0.03]'">
+
+            <!-- Drag Handle -->
+            <span
+              class="shrink-0 cursor-grab active:cursor-grabbing text-white/20 hover:text-white/50 transition-colors select-none"
+              title="Arrastrar para reordenar">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="8" cy="5" r="1.8" />
+                <circle cx="16" cy="5" r="1.8" />
+                <circle cx="8" cy="12" r="1.8" />
+                <circle cx="16" cy="12" r="1.8" />
+                <circle cx="8" cy="19" r="1.8" />
+                <circle cx="16" cy="19" r="1.8" />
+              </svg>
+            </span>
+
+            <!-- Checkbox -->
+            <button (click)="toggleItem(i)"
+              class="shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all"
+              [class]="item.checked
+                ? 'bg-gradient-to-br from-purple-400 to-purple-600 border-transparent shadow-[0_2px_8px_rgba(139,92,246,0.4)]'
+                : 'border-white/25 bg-white/[0.03] hover:border-purple-400/60'">
+              @if (item.checked) {
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              }
+            </button>
+
+            <!-- Texto -->
+            <input type="text" placeholder="Elemento de la lista..." autocomplete="off"
+              [value]="item.text"
+              (input)="updateItemText(i, $any($event.target).value)"
+              (blur)="onItemBlur()"
+              class="flex-1 bg-transparent text-sm focus:outline-none placeholder:text-white/25 transition-colors"
+              [class]="item.checked ? 'text-white/35 line-through' : 'text-white/85'" />
+
+            <!-- Quitar -->
+            <button (click)="removeItem(i)"
+              class="shrink-0 p-1 rounded-lg transition-all opacity-0 group-hover/item:opacity-100
+                     text-white/40 hover:text-white/80 hover:bg-white/[0.08]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
         }
       </div>
-      }
-    </div>
 
     @if (!isReadOnly()) {
     <div class="px-5 pt-2 pb-1">

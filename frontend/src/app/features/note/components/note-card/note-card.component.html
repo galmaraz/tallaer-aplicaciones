@@ -1,4 +1,5 @@
-<article (click)="onEdit()" class="group relative overflow-hidden rounded-3xl cursor-pointer
+<article (click)="onEdit()"
+  class="group relative rounded-3xl cursor-pointer
          bg-white/[0.05] border border-white/[0.12]
          backdrop-blur-3xl backdrop-saturate-150
          shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
@@ -8,12 +9,12 @@
          transition-all duration-500">
 
   @if (!coverImageUrl()) {
-  <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none">
+  <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none rounded-t-3xl">
   </div>
   }
 
   @if (coverImageUrl()) {
-  <div class="w-full overflow-hidden" style="height: 160px;">
+  <div class="w-full overflow-hidden rounded-t-3xl" style="height: 160px;">
     <img [src]="coverImageUrl()!" alt="Imagen de la nota"
       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
   </div>

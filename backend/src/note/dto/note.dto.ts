@@ -5,17 +5,22 @@ export class NoteDto {
   @IsOptional()
   id?: number;
 
-  @IsString()
-  @IsNotEmpty()
-  title: string;
+    @IsNotEmpty()
+    @IsString()
+    title!: string;
 
   @IsString()
-  content: string;
+  content!: string;
 
+  @IsOptional()
   @IsBoolean()
-  activo: boolean;
+  activo?: boolean;
 
   @IsNumber()
   @IsNotEmpty()
-  usuario_id: number;
+  usuario_id!: number;
+
+  @IsOptional()
+  @IsBoolean()
+  deleted?: boolean;
 }

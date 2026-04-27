@@ -23,6 +23,7 @@ export interface NoteView {
   usuario_id?: number;
   is_shared?: boolean;
   usuario?: NoteOwner;
+  deleted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -35,13 +36,16 @@ export interface NoteRaw {
   usuario_id?: number;
   is_shared?: boolean;
   usuario?: NoteOwner;
+  deleted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface EditorSnapshot {
   title: string;
+  noteType: 'text' | 'list';
   items: NoteItem[];
+  textBody: string;
 }
 
 export function parseNoteView(raw: NoteRaw): NoteView {
@@ -70,6 +74,7 @@ export function parseNoteView(raw: NoteRaw): NoteView {
     usuario_id: raw.usuario_id,
     is_shared: raw.is_shared,
     usuario: raw.usuario,
+    deleted: raw.deleted ?? false,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };
@@ -82,5 +87,6 @@ export function serializeNote(note: NoteView): NoteRaw {
     content: JSON.stringify(note.content),
     activo: note.activo,
     usuario_id: note.usuario_id,
+    deleted: note.deleted ?? false,
   };
 }
