@@ -373,6 +373,8 @@ export class NoteEditorComponent implements OnInit {
           this.#setAttachmentFeedback('Imagen subida correctamente.', false);
           this.#resetAttachmentInput();
           this.#loadAttachments(noteId);
+          const current = this.note();
+          if (current) this.saved.emit(current);
           setTimeout(() => this.attachmentFeedback.set(null), 3000);
         },
         error: () => {

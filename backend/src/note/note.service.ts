@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Note } from './model/note.model';
 import { NoteDto } from './dto/note.dto';
 import { Noteshare } from 'src/noteshare/model/noteshare.model';
+import { Attachment } from 'src/attachment/model/attachment.model';
 
 @Injectable()
 export class NoteService {
@@ -12,6 +13,8 @@ export class NoteService {
     private readonly repository: Repository<Note>,
     @InjectRepository(Noteshare)
     private readonly shareRepository: Repository<Noteshare>,
+    @InjectRepository(Attachment)
+    private readonly attachmentRepository: Repository<Attachment>,
   ) {}
 
   async getAllForUser(userId: number) {
@@ -102,6 +105,44 @@ export class NoteService {
     await this.repository.update({ id }, { deleted: false });
     return await this.repository.findOne({
       where: { id },
+      relations: { usuario: true },
+    });
+  }
+
+  async duplicate(id: number, newOwnerId: number) {
+    const original = await this.repository.findOne({ where: { id } });
+    if (!original) throw new Error(`Nota con id ${id} no encontrada`);
+
+    // 1. Crear la nota copia
+    const copyEntity = this.repository.create({
+      title: `Copia de ${original.title}`,
+      content: original.content,
+      activo: true,
+      deleted: false,
+      usuario_id: newOwnerId,
+    });
+    const savedCopy = await this.repository.save(copyEntity);
+
+    // 2. Clonar attachments (filedata es Buffer en BD, copiar registros)
+    const originalAttachments = await this.attachmentRepository.find({
+      where: { note: { id } },
+    });
+
+    if (originalAttachments.length > 0) {
+      const newAttachments = originalAttachments.map(a => {
+        const copy = new Attachment();
+        copy.filename = a.filename;
+        copy.filetype = a.filetype;
+        copy.filesize = a.filesize;
+        copy.filedata = a.filedata;
+        copy.note = savedCopy;
+        return copy;
+      });
+      await this.attachmentRepository.save(newAttachments);
+    }
+
+    return await this.repository.findOne({
+      where: { id: savedCopy.id },
       relations: { usuario: true },
     });
   }

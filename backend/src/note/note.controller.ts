@@ -40,4 +40,14 @@ export class NoteController {
   async delete(@Param('id', ParseIntPipe) id: number) {
     return await this.service.delete(id);
   }
+
+  @Post('duplicate/:id/:userId')
+    async duplicate(
+      @Param('id', ParseIntPipe) id: number,
+      @Param('userId', ParseIntPipe) userId: number,
+    ) {
+      return await this.service.duplicate(id, userId);
+  }
+  
+
 }

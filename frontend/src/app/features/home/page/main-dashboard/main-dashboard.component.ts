@@ -96,6 +96,7 @@ export class MainDashboardComponent{
   }
 
   onNoteSaved(savedNote: NoteView): void {
+    this.#savedDuringSession = true; 
     if (!savedNote?.id) {
       this.#refreshNotes();
       return;
@@ -135,18 +136,15 @@ export class MainDashboardComponent{
   }
 
   duplicateNote(note: NoteView): void {
-    const copy: NoteView = {
-      title: `Copia de ${note.title}`,
-      content: {
-        type: note.content.type,
-        body: note.content.body,
-        items: note.content.items?.map(i => ({ ...i })),
-      },
-      activo: true,
-    };
-    this.#noteService.save(serializeNote(copy)).subscribe({
+    const ownerId = this.#currentUser.currentUserId();
+    if (!note.id || ownerId === null) return;
+
+    this.#noteService.duplicate(note.id, ownerId).subscribe({
       next: (saved) => this.notes.update(current => [saved, ...current]),
-      error: () => this.#refreshNotes(),
+      error: (err) => {
+        console.error('Error al duplicar nota:', err);
+        this.#refreshNotes();
+      },
     });
   }
 

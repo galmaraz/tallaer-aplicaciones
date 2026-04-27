@@ -48,4 +48,10 @@ export class NoteService {
   delete(id: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/delete/${id}`, {});
   }
+
+  duplicate(id: number, userId: number): Observable<NoteView> {
+    return this.http
+      .post<NoteRaw>(`${this.apiUrl}/duplicate/${id}/${userId}`, {})
+      .pipe(map(parseNoteView));
+  }
 }

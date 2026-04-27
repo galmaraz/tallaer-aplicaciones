@@ -1,6 +1,7 @@
 import {
   Component, computed,
   DestroyRef,
+  effect,
   HostListener,
   inject,
   input,
@@ -23,7 +24,7 @@ import { CurrentUserService } from '../../../../core/user/services/current.servi
   imports: [DatePipe],
   templateUrl: './note-card.component.html',
 })
-export class NoteCardComponent implements OnInit {
+export class NoteCardComponent {
   note = input.required<NoteView>();
   editNote = output<NoteView>();
   softDeleteNote = output<number>();
@@ -46,28 +47,34 @@ export class NoteCardComponent implements OnInit {
 
   private readonly PREVIEW_LIMIT = 3;
 
-  ngOnInit(): void {
-    const noteId = this.note().id;
-    if (!noteId) return;
+  constructor() {
+    effect(() => {
+      const noteId = this.note().id;
+      if (!noteId) {
+        this.coverImageUrl.set(null);
+        this.collaborators.set([]);
+        return;
+      }
 
-    this.#attachmentService
-      .getByNoteId(noteId)
-      .pipe(takeUntilDestroyed(this.#destroyRef))
-      .subscribe({
-        next: (attachments) => {
-          const first = attachments.find(a => a.imageUrl);
-          this.coverImageUrl.set(first?.imageUrl ?? null);
-        },
-        error: () => {},
-      });
+      this.#attachmentService
+        .getByNoteId(noteId)
+        .pipe(takeUntilDestroyed(this.#destroyRef))
+        .subscribe({
+          next: (attachments) => {
+            const first = attachments.find(a => a.imageUrl);
+            this.coverImageUrl.set(first?.imageUrl ?? null);
+          },
+          error: () => {},
+        });
 
-    this.#shareService
-      .getByNote(noteId)
-      .pipe(takeUntilDestroyed(this.#destroyRef))
-      .subscribe({
-        next: (shares) => this.collaborators.set(shares),
-        error: () => this.collaborators.set([]),
-      });
+      this.#shareService
+        .getByNote(noteId)
+        .pipe(takeUntilDestroyed(this.#destroyRef))
+        .subscribe({
+          next: (shares) => this.collaborators.set(shares),
+          error: () => this.collaborators.set([]),
+        });
+    });
   }
 
   get previewItems(): NoteItem[] {
