@@ -1,4 +1,3 @@
-import { IsBoolean } from 'class-validator';
 import {
   Column,
   CreateDateColumn,
@@ -18,9 +17,11 @@ export class Note {
   @Column()
   content: string;
 
-  @Column()
-  @IsBoolean()
-  activo: boolean;
+  @Column({ default: true })
+  activo!: boolean;
+
+  @Column({ default: false })
+  deleted!: boolean;
 
   @CreateDateColumn()
   created_at: Date;

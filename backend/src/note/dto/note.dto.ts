@@ -7,12 +7,17 @@ export class NoteDto {
 
     @IsNotEmpty()
     @IsString()
-    title: string;
+    title!: string;
 
     @IsNotEmpty()
     @IsString()
-    content: string;
-    
+    content!: string;
+
+    @IsOptional()
     @IsBoolean()
-    activo: boolean;
+    activo?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    deleted?: boolean;
 }

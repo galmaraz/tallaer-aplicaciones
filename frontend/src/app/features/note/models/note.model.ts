@@ -14,6 +14,7 @@ export interface NoteView {
   title: string;
   content: NoteContent;
   activo: boolean;
+  deleted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -23,13 +24,16 @@ export interface NoteRaw {
   title: string;
   content: string;
   activo: boolean;
+  deleted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface EditorSnapshot {
   title: string;
+  noteType: 'text' | 'list';
   items: NoteItem[];
+  textBody: string;
 }
 
 export function parseNoteView(raw: NoteRaw): NoteView {
@@ -55,6 +59,7 @@ export function parseNoteView(raw: NoteRaw): NoteView {
     title: raw.title,
     content,
     activo: raw.activo,
+    deleted: raw.deleted ?? false,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };
@@ -66,5 +71,6 @@ export function serializeNote(note: NoteView): NoteRaw {
     title: note.title,
     content: JSON.stringify(note.content),
     activo: note.activo,
+    deleted: note.deleted ?? false,
   };
 }

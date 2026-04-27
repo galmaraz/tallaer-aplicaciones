@@ -1,5 +1,5 @@
 <article (click)="onEdit()"
-  class="group relative overflow-hidden rounded-3xl cursor-pointer
+  class="group relative rounded-3xl cursor-pointer
          bg-white/[0.05] border border-white/[0.12]
          backdrop-blur-3xl backdrop-saturate-150
          shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),inset_0_-1px_2px_0_rgba(0,0,0,0.2),0_12px_40px_rgba(0,0,0,0.4)]
@@ -10,12 +10,12 @@
 
   <!-- Reflejo glass superior (solo cuando NO hay imagen) -->
   @if (!coverImageUrl()) {
-    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none"></div>
+    <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none rounded-t-3xl"></div>
   }
 
-  <!-- Imagen de portada (estilo Google Keep) -->
+  <!-- Imagen de portada — con su propio overflow-hidden para que no afecte el dropdown -->
   @if (coverImageUrl()) {
-    <div class="w-full overflow-hidden" style="height: 160px;">
+    <div class="w-full overflow-hidden rounded-t-3xl" style="height: 160px;">
       <img [src]="coverImageUrl()!"
         alt="Imagen de la nota"
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -82,20 +82,62 @@
       <p class="text-white/75 text-sm leading-relaxed line-clamp-4">{{ note().content.body }}</p>
     }
 
-    <!-- Footer: fecha + botón eliminar -->
-    <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.07] relative">
+    <!-- Footer: fecha + botón 3 puntos -->
+    <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/[0.07]">
       <span class="text-[10px] text-white/30 font-medium">
         {{ note().updated_at | date: 'dd/MM/yyyy' }}
       </span>
-      <button (click)="onDelete($event)"
-        class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all
-               text-white/35 hover:text-red-400 hover:bg-red-500/[0.12]">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        </svg>
-      </button>
+
+      <!-- Botón 3 puntos + menú contextual -->
+      <div class="relative" (click)="$event.stopPropagation()">
+        <button (click)="toggleMenu($event)"
+          class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all
+                 text-white/40 hover:text-white/80 hover:bg-white/[0.08]"
+          title="Más opciones">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1" fill="currentColor" />
+            <circle cx="12" cy="12" r="1" fill="currentColor" />
+            <circle cx="12" cy="19" r="1" fill="currentColor" />
+          </svg>
+        </button>
+
+        <!-- Dropdown menu -->
+        @if (menuOpen()) {
+          <div class="absolute right-0 bottom-full mb-1 z-[9999] min-w-[190px]
+                      bg-[#170d30] border border-white/[0.15]
+                      rounded-2xl shadow-2xl shadow-black/70
+                      overflow-hidden backdrop-blur-xl">
+
+            <!-- Borrar nota -->
+            <button (click)="onSoftDelete($event)"
+              class="flex items-center gap-3 w-full px-4 py-3 text-sm text-white/75
+                     hover:bg-white/[0.08] hover:text-white transition-colors text-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="text-red-400/70 shrink-0">
+                <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              <span>Borrar nota</span>
+            </button>
+
+            <!-- Divisor -->
+            <div class="mx-3 h-px bg-white/[0.07]"></div>
+
+            <!-- Hacer una copia -->
+            <button (click)="onDuplicate($event)"
+              class="flex items-center gap-3 w-full px-4 py-3 text-sm text-white/75
+                     hover:bg-white/[0.08] hover:text-white transition-colors text-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="text-purple-300/70 shrink-0">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span>Hacer una copia</span>
+            </button>
+          </div>
+        }
+      </div>
     </div>
 
   </div>

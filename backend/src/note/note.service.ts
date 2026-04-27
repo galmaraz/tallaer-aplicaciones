@@ -12,44 +12,51 @@ export class NoteService {
   ) {}
 
   getAll() {
-    return this.repository.find();
+    return this.repository.find({ where: { deleted: false } });
+  }
+
+  getTrash() {
+    return this.repository.find({ where: { deleted: true } });
   }
 
   getById(id: number) {
-    const data = this.repository.findOne({
-      where: { id },
-    });
-    return data;
+    return this.repository.findOne({ where: { id } });
   }
 
   async save(data: NoteDto) {
     if (data.id != undefined && data.id != null && data.id != 0) {
-      const usuario = await this.repository.findOneBy({ id: data.id });
-      if (!usuario) throw new Error(`Entidad con id ${data.id} no encontrado`);
-
+      const note = await this.repository.findOneBy({ id: data.id });
+      if (!note) throw new Error(`Entidad con id ${data.id} no encontrado`);
       await this.repository.update({ id: data.id }, data);
-      return 'Se actualizo correctamente!!!';
+      return this.repository.findOne({ where: { id: data.id } });
     } else {
-      const entity = await this.repository.create(data);
-      await this.repository.save(entity);
-      return 'Se guardo correctamente!!!';
+      const entity = this.repository.create(data);
+      return this.repository.save(entity);
     }
+  }
+
+  async softDelete(id: number) {
+    await this.findById(id);
+    await this.repository.update({ id }, { deleted: true });
+    return this.repository.findOne({ where: { id } });
+  }
+
+  async restore(id: number) {
+    await this.findById(id);
+    await this.repository.update({ id }, { deleted: false });
+    return this.repository.findOne({ where: { id } });
   }
 
   async delete(id: number) {
     const data = await this.findById(id);
     if (!data) throw new Error(`Entidad con id ${id} no encontrado`);
-    await this.repository.delete({ id: id });
+    await this.repository.delete({ id });
     return 'Se elimino correctamente!!!';
   }
 
   async findById(id: number) {
-    const entity = await this.repository.findOne({
-      where: { id },
-    });
-
+    const entity = await this.repository.findOne({ where: { id } });
     if (!entity) throw new Error(`Entidad con id ${id} no encontrado`);
-
     return entity;
   }
 }

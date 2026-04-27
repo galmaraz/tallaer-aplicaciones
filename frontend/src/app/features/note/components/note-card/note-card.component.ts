@@ -1,4 +1,13 @@
-import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  HostListener,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NoteItem, NoteView } from '../../models/note.model';
@@ -13,14 +22,16 @@ import { AttachmentService } from '../../services/attachment.service';
 export class NoteCardComponent implements OnInit {
   note = input.required<NoteView>();
   editNote = output<NoteView>();
-  deleteNote = output<number>();
+  softDeleteNote = output<number>();
+  duplicateNote = output<NoteView>();
 
   #attachmentService = inject(AttachmentService);
   #destroyRef = inject(DestroyRef);
 
   coverImageUrl = signal<string | null>(null);
+  menuOpen = signal(false);
 
-  private readonly PREVIEW_LIMIT = 3; // reducido a 3 para dar espacio a la imagen
+  private readonly PREVIEW_LIMIT = 3;
 
   ngOnInit(): void {
     const noteId = this.note().id;
@@ -34,7 +45,7 @@ export class NoteCardComponent implements OnInit {
           const first = attachments.find(a => a.imageUrl);
           this.coverImageUrl.set(first?.imageUrl ?? null);
         },
-        error: () => {} // silencioso, la tarjeta simplemente no muestra imagen
+        error: () => {},
       });
   }
 
@@ -55,12 +66,33 @@ export class NoteCardComponent implements OnInit {
   }
 
   onEdit(): void {
+    if (this.menuOpen()) {
+      this.menuOpen.set(false);
+      return;
+    }
     this.editNote.emit(this.note());
   }
 
-  onDelete(event: MouseEvent): void {
+  toggleMenu(event: MouseEvent): void {
     event.stopPropagation();
+    this.menuOpen.update(v => !v);
+  }
+
+  onSoftDelete(event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuOpen.set(false);
     const id = this.note().id;
-    if (id !== undefined) this.deleteNote.emit(id);
+    if (id !== undefined) this.softDeleteNote.emit(id);
+  }
+
+  onDuplicate(event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuOpen.set(false);
+    this.duplicateNote.emit(this.note());
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.menuOpen()) this.menuOpen.set(false);
   }
 }
