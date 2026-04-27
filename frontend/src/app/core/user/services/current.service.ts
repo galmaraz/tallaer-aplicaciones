@@ -4,11 +4,9 @@ import { effect, Injectable, signal } from '@angular/core';
 export class CurrentUserService {
   readonly #STORAGE_KEY = 'currentUserId';
 
-  /** ID del usuario actualmente "logueado" (sin login real, lo controla el switcher) */
   readonly currentUserId = signal<number | null>(this.#readFromStorage());
 
   constructor() {
-    // Cada vez que cambia el signal, sincroniza con localStorage
     effect(() => {
       const id = this.currentUserId();
       if (id === null) {

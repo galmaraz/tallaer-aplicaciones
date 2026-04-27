@@ -17,25 +17,29 @@ import { NoteShareRole, ROLE_LABELS } from '../../models/noteshare-role.enum';
 import { NoteShare } from '../../models/noteshare.interface';
 import { User } from '../../../../core/user/models/user.interface';
 
+interface NoteOwner {
+  id: number;
+  name: string;
+  email: string;
+}
+
 @Component({
   selector: 'app-share-dialog',
   standalone: true,
   templateUrl: './share-dialog.component.html',
 })
 export class ShareDialogComponent implements OnInit {
-  // Inputs / Outputs
   noteId = input.required<number>();
+  noteOwner = input<NoteOwner | null>(null);
   initialCollaborators = input<NoteShare[]>([]);
   closed = output<void>();
   collaboratorsChanged = output<NoteShare[]>();
 
-  // Servicios
   #shareService = inject(NoteShareService);
   #userService = inject(UserService);
   #currentUser = inject(CurrentUserService);
   #destroyRef = inject(DestroyRef);
 
-  // Estado
   protected collaborators = signal<NoteShare[]>([]);
   protected allUsers = signal<User[]>([]);
   protected query = signal('');
@@ -44,19 +48,28 @@ export class ShareDialogComponent implements OnInit {
   protected deletingId = signal<number | null>(null);
   protected error = signal<string | null>(null);
 
-  // Constantes para el template
   protected readonly NoteShareRole = NoteShareRole;
   protected readonly ROLE_LABELS = ROLE_LABELS;
   protected readonly currentUserId = this.#currentUser.currentUserId;
 
-  /** Usuarios que aún no son colaboradores (filtra al actual y a los ya añadidos) */
+  /** ID del verdadero dueño de la nota (no necesariamente el usuario actual) */
+  protected ownerId = computed<number | null>(() => {
+    return this.noteOwner()?.id ?? this.currentUserId();
+  });
+
+  /** ¿El usuario actual es el dueño de la nota? */
+  protected isCurrentUserOwner = computed<boolean>(() => {
+    return this.ownerId() === this.currentUserId();
+  });
+
+  /** Usuarios que aún no son colaboradores ni el dueño */
   protected readonly suggestedUsers = computed<User[]>(() => {
     const q = this.query().toLowerCase().trim();
     const collabIds = new Set(this.collaborators().map(c => c.usuario.id));
-    const ownerId = this.currentUserId();
+    const owner = this.ownerId();
 
     return this.allUsers().filter(u => {
-      if (u.id === ownerId) return false;
+      if (u.id === owner) return false;
       if (collabIds.has(u.id)) return false;
       if (!q) return true;
       return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
@@ -73,19 +86,30 @@ export class ShareDialogComponent implements OnInit {
         next: (users) => this.allUsers.set(users),
         error: () => this.error.set('No se pudieron cargar los usuarios.'),
       });
+
+    // Si no nos pasaron initialCollaborators o están vacíos, los buscamos
+    if (this.initialCollaborators().length === 0) {
+      this.#refresh();
+    }
   }
 
   protected getInitials(name: string): string {
     return name.trim().split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
   }
 
-  protected getCurrentUserName(): string {
+  protected getOwnerName(): string {
+    const owner = this.noteOwner();
+    if (owner) return owner.name;
+
     const id = this.currentUserId();
     if (id === null) return '';
     return this.allUsers().find(u => u.id === id)?.name ?? '';
   }
 
-  protected getCurrentUserEmail(): string {
+  protected getOwnerEmail(): string {
+    const owner = this.noteOwner();
+    if (owner) return owner.email;
+
     const id = this.currentUserId();
     if (id === null) return '';
     return this.allUsers().find(u => u.id === id)?.email ?? '';
@@ -105,7 +129,6 @@ export class ShareDialogComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe({
         next: () => {
-          // Refresca desde el backend para obtener el id real del share
           this.#refresh();
           this.query.set('');
         },

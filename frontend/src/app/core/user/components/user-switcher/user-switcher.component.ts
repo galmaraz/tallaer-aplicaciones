@@ -27,34 +27,23 @@ export class UserSwitcherComponent implements OnInit {
   ngOnInit(): void {
     this.#userService.getAll().subscribe(users => {
       this.users.set(users);
-      // Si no hay usuario guardado, seleccionamos el primero
       if (this.#currentUser.currentUserId() === null && users.length > 0) {
         this.#currentUser.setCurrentUserId(users[0].id);
       }
     });
   }
 
-  toggle(): void {
-    this.isOpen.update(v => !v);
-  }
+  toggle(): void { this.isOpen.update(v => !v); }
 
   selectUser(user: User): void {
     this.#currentUser.setCurrentUserId(user.id);
     this.isOpen.set(false);
   }
 
-  /** Iniciales para el avatar (máx. 2 letras) */
   protected getInitials(name: string): string {
-    return name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(part => part[0] ?? '')
-      .join('')
-      .toUpperCase();
+    return name.trim().split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
   }
 
-  /** Cierra el dropdown al hacer click fuera */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     if (!this.#elementRef.nativeElement.contains(event.target as Node)) {
@@ -62,9 +51,6 @@ export class UserSwitcherComponent implements OnInit {
     }
   }
 
-  /** Cierra con Escape */
   @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.isOpen.set(false);
-  }
+  onEscape(): void { this.isOpen.set(false); }
 }
