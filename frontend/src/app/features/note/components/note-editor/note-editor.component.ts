@@ -35,6 +35,7 @@ export class NoteEditorComponent implements OnInit {
   note = input<NoteView | null>(null);
   saved = output<NoteView>();
   closed = output<void>();
+  addReminder = output<NoteView>();
 
   @ViewChild('attachmentInput')
   attachmentInput?: ElementRef<HTMLInputElement>;
@@ -138,6 +139,14 @@ export class NoteEditorComponent implements OnInit {
   onTitleBlur(): void { this.#saveToHistoryIfChanged(); }
   
 
+
+  onReminderIconClick(): void {
+    const notaActual = this.note();
+
+    if (!notaActual?.id || this.saving()) return;
+
+    this.addReminder.emit(notaActual);
+  }
 
   onShareIconClick() {
     this.showShareModal.set(true);

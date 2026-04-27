@@ -1,4 +1,4 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Recordatorio, RecordatorioDto } from '../../models/recordatorio.model';
 
@@ -10,6 +10,8 @@ import { Recordatorio, RecordatorioDto } from '../../models/recordatorio.model';
 })
 export class RecordatorioEditorComponent {
   recordatorio = input<Recordatorio | null>(null);
+  noteId = input<number | null>(null);
+  noteTitle = input<string | null>(null);
 
   guardar = output<RecordatorioDto>();
   cerrar = output<void>();
@@ -19,49 +21,44 @@ export class RecordatorioEditorComponent {
   fechaRecordatorio = signal('');
   completado = signal(false);
 
-  // constructor() {
-  //   effect(() => {
-  //     const r = this.recordatorio();
+  readonly tituloModal = computed(() =>
+    this.recordatorio() ? 'Editar recordatorio' : 'Nuevo recordatorio'
+  );
 
-  //     this.titulo.set(r?.titulo ?? '');
-  //     this.descripcion.set(r?.descripcion ?? '');
-  //     this.completado.set(r?.completado ?? false);
-  //     this.fechaRecordatorio.set(this.convertirAInputDateTime(r?.fechaRecordatorio));
-  //   });
-  // }
   constructor() {
-  effect(() => {
-    const r = this.recordatorio();
+    effect(() => {
+      const r = this.recordatorio();
 
-    // SI NO HAY RECORDATORIO (nuevo)
-    if (!r) {
-      this.titulo.set('');
-      this.descripcion.set('');
-      this.completado.set(false);
-      this.fechaRecordatorio.set(this.convertirAInputDateTime());
-      return;
-    }
+      if (!r) {
+        this.titulo.set('');
+        this.descripcion.set('');
+        this.completado.set(false);
+        this.fechaRecordatorio.set(this.convertirAInputDateTime());
+        return;
+      }
 
-    //SI ES EDICIÓN (carga datos)
-    this.titulo.set(r.titulo);
-    this.descripcion.set(r.descripcion ?? '');
-    this.completado.set(r.completado);
-    this.fechaRecordatorio.set(
-      this.convertirAInputDateTime(r.fechaRecordatorio)
-      );
-     });
+      this.titulo.set(r.titulo);
+      this.descripcion.set(r.descripcion ?? '');
+      this.completado.set(r.completado);
+      this.fechaRecordatorio.set(this.convertirAInputDateTime(r.fechaRecordatorio));
+    });
   }
 
-  private convertirAInputDateTime(fecha?: string): string {
+  private convertirAInputDateTime(fecha?: string | Date): string {
     const date = fecha ? new Date(fecha) : new Date();
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
   }
 
+  private obtenerNoteId(): number | null {
+    return this.noteId() ?? this.recordatorio()?.note?.id ?? null;
+  }
+
   guardarFormulario(): void {
     const titulo = this.titulo().trim();
+    const idNota = this.obtenerNoteId();
 
-    if (!titulo) return;
+    if (!titulo || !idNota) return;
 
     this.guardar.emit({
       titulo,
@@ -69,6 +66,7 @@ export class RecordatorioEditorComponent {
       fechaRecordatorio: new Date(this.fechaRecordatorio()).toISOString(),
       completado: this.completado(),
       estado: true,
+      noteId: idNota,
     });
   }
 

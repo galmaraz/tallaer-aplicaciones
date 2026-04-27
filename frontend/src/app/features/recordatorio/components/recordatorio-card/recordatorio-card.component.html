@@ -37,6 +37,12 @@
             {{ recordatorio().descripcion }}
           </p>
         }
+
+        @if (recordatorio().note?.title) {
+          <p class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-purple-200/75 bg-purple-500/[0.10] border border-purple-400/20">
+            Nota: {{ recordatorio().note?.title }}
+          </p>
+        }
       </div>
     </div>
 

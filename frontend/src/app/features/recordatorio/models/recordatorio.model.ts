@@ -1,3 +1,5 @@
+import { NoteView } from '../../note/models/note.model';
+
 export interface Recordatorio {
   id?: number;
   titulo: string;
@@ -5,6 +7,7 @@ export interface Recordatorio {
   fechaRecordatorio: string;
   completado: boolean;
   estado: boolean;
+  note?: NoteView;
 }
 
 export interface RecordatorioDto {
@@ -13,4 +16,5 @@ export interface RecordatorioDto {
   fechaRecordatorio: string;
   completado?: boolean;
   estado?: boolean;
+  noteId: number;
 }

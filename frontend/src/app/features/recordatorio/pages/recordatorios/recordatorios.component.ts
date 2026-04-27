@@ -41,7 +41,8 @@ export class RecordatoriosComponent {
         if (!q) return true;
         return (
           r.titulo.toLowerCase().includes(q) ||
-          (r.descripcion ?? '').toLowerCase().includes(q)
+          (r.descripcion ?? '').toLowerCase().includes(q) ||
+          (r.note?.title ?? '').toLowerCase().includes(q)
         );
       })
       .sort(ordenarPorFecha);

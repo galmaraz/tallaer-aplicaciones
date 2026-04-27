@@ -14,6 +14,7 @@ export class NoteCardComponent implements OnInit {
   note = input.required<NoteView>();
   editNote = output<NoteView>();
   deleteNote = output<number>();
+  addReminder = output<NoteView>();
 
   #attachmentService = inject(AttachmentService);
   #destroyRef = inject(DestroyRef);
@@ -56,6 +57,11 @@ export class NoteCardComponent implements OnInit {
 
   onEdit(): void {
     this.editNote.emit(this.note());
+  }
+
+  onAddReminder(event: MouseEvent): void {
+    event.stopPropagation();
+    this.addReminder.emit(this.note());
   }
 
   onDelete(event: MouseEvent): void {

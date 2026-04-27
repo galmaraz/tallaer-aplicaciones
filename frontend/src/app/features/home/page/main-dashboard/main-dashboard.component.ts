@@ -4,6 +4,9 @@ import { NoteService } from '../../../note/services/note.service';
 import { NoteFilterService } from '../../../note/services/note-filter.service';
 import { NoteEditorComponent } from '../../../note/components/note-editor/note-editor.component';
 import { NoteCardComponent } from '../../../note/components/note-card/note-card.component';
+import { RecordatorioEditorComponent } from '../../../recordatorio/components/recordatorio-editor/recordatorio-editor.component';
+import { RecordatorioDto } from '../../../recordatorio/models/recordatorio.model';
+import { RecordatorioService } from '../../../recordatorio/services/recordatorio.service';
 
 type ViewMode = 'grid' | 'list';
 
@@ -13,19 +16,22 @@ const byNewest = (a: NoteView, b: NoteView): number =>
 @Component({
   selector: 'app-main-dashboard',
   standalone: true,
-  imports: [NoteEditorComponent, NoteCardComponent],
+  imports: [NoteEditorComponent, NoteCardComponent, RecordatorioEditorComponent],
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css',
 })
 export class MainDashboardComponent {
   #noteService = inject(NoteService);
   #filterService = inject(NoteFilterService);
+  #recordatorioService = inject(RecordatorioService);
 
   notes = signal<NoteView[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   editorOpen = signal(false);
   selectedNote = signal<NoteView | null>(null);
+  reminderEditorOpen = signal(false);
+  selectedNoteForReminder = signal<NoteView | null>(null);
   viewMode = signal<ViewMode>('grid');
 
   #savedDuringSession = false;
@@ -110,6 +116,23 @@ export class MainDashboardComponent {
       next: () => this.#refreshNotes(),
       // Si falla, restaurar la lista desde el backend
       error: () => this.#refreshNotes(),
+    });
+  }
+
+  openReminderForNote(note: NoteView): void {
+    if (!note.id) return;
+    this.selectedNoteForReminder.set(note);
+    this.reminderEditorOpen.set(true);
+  }
+
+  closeReminderEditor(): void {
+    this.reminderEditorOpen.set(false);
+    this.selectedNoteForReminder.set(null);
+  }
+
+  saveReminderForNote(data: RecordatorioDto): void {
+    this.#recordatorioService.crear(data).subscribe({
+      next: () => this.closeReminderEditor(),
     });
   }
 }

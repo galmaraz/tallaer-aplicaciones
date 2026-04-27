@@ -123,7 +123,7 @@
   <div class="columns-1 md:columns-2 lg:columns-3 gap-5">
     @for (note of filteredNotes(); track note.id; let i = $index) {
       <div class="break-inside-avoid mb-5 note-enter" [style.animation-delay]="(i * 45) + 'ms'">
-        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" />
+        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" (addReminder)="openReminderForNote($event)" />
       </div>
     }
   </div>
@@ -133,7 +133,7 @@
   <div class="flex flex-col gap-4 max-w-2xl mx-auto">
     @for (note of filteredNotes(); track note.id; let i = $index) {
       <div class="note-enter" [style.animation-delay]="(i * 40) + 'ms'">
-        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" />
+        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" (addReminder)="openReminderForNote($event)" />
       </div>
     }
   </div>
@@ -143,5 +143,15 @@
   <app-note-editor
     [note]="selectedNote()"
     (saved)="onNoteSaved($event)"
-    (closed)="onEditorClosed()" />
+    (closed)="onEditorClosed()"
+    (addReminder)="openReminderForNote($event)" />
+}
+
+@if (reminderEditorOpen() && selectedNoteForReminder()) {
+  <app-recordatorio-editor
+    [noteId]="selectedNoteForReminder()?.id ?? null"
+    [noteTitle]="selectedNoteForReminder()?.title ?? null"
+    [recordatorio]="null"
+    (guardar)="saveReminderForNote($event)"
+    (cerrar)="closeReminderEditor()" />
 }

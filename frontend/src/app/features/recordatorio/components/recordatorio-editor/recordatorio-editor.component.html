@@ -13,9 +13,13 @@
     <div class="flex items-center justify-between px-5 pt-4">
       <div>
         <h2 class="text-lg font-semibold text-white">
-          {{ recordatorio() ? 'Editar recordatorio' : 'Nuevo recordatorio' }}
+          {{ tituloModal() }}
         </h2>
-        <p class="text-xs text-white/35 mt-0.5">Programa una alerta estilo Google Keep</p>
+        @if (noteTitle()) {
+          <p class="text-xs text-white/35 mt-0.5">Recordatorio para: {{ noteTitle() }}</p>
+        } @else {
+          <p class="text-xs text-white/35 mt-0.5">Programa una alerta estilo Google Keep</p>
+        }
       </div>
 
       <button (click)="cerrarModal()" title="Cerrar"
