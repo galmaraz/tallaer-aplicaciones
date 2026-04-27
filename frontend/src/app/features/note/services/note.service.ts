@@ -9,9 +9,9 @@ export class NoteService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/notecontroller`;
 
-  getAll(): Observable<NoteView[]> {
+  getAll(userId: number): Observable<NoteView[]> {
     return this.http
-      .post<NoteRaw[]>(`${this.apiUrl}/getall`, {})
+      .post<NoteRaw[]>(`${this.apiUrl}/getall/${userId}`, {})
       .pipe(map(notes => notes.map(parseNoteView)));
   }
 

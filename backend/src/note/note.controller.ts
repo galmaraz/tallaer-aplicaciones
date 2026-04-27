@@ -6,9 +6,9 @@ import { NoteDto } from './dto/note.dto';
 export class NoteController {
   constructor(private readonly service: NoteService) {}
 
-  @Post('getall')
-  getAll() {
-    return this.service.getAll();
+  @Post('getall/:userId')
+  getAll(@Param('userId', ParseIntPipe) userId: number) {
+    return this.service.getAllForUser(userId);
   }
 
   @Post('gettrash')

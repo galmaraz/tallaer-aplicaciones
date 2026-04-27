@@ -1,5 +1,5 @@
 import {
-  Component,
+  Component, computed,
   DestroyRef,
   HostListener,
   inject,
@@ -12,6 +12,10 @@ import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NoteItem, NoteView } from '../../models/note.model';
 import { AttachmentService } from '../../services/attachment.service';
+import { NoteShareService } from '../../../note-share/services/noteshare.service';
+import { NoteShare } from '../../../note-share/models/noteshare.interface';
+import { NoteShareRole } from '../../../note-share/models/noteshare-role.enum';
+import { CurrentUserService } from '../../../../core/user/services/current.service';
 
 @Component({
   selector: 'app-note-card',
@@ -24,11 +28,15 @@ export class NoteCardComponent implements OnInit {
   editNote = output<NoteView>();
   softDeleteNote = output<number>();
   duplicateNote = output<NoteView>();
+  shareNote = output<NoteView>();
 
   #attachmentService = inject(AttachmentService);
+  #shareService = inject(NoteShareService);
+  #currentUser = inject(CurrentUserService);
   #destroyRef = inject(DestroyRef);
 
   coverImageUrl = signal<string | null>(null);
+  collaborators = signal<NoteShare[]>([]);
   menuOpen = signal(false);
 
   private readonly PREVIEW_LIMIT = 3;
@@ -46,6 +54,14 @@ export class NoteCardComponent implements OnInit {
           this.coverImageUrl.set(first?.imageUrl ?? null);
         },
         error: () => {},
+      });
+
+    this.#shareService
+      .getByNote(noteId)
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: (shares) => this.collaborators.set(shares),
+        error: () => this.collaborators.set([]),
       });
   }
 
@@ -94,5 +110,14 @@ export class NoteCardComponent implements OnInit {
   @HostListener('document:click')
   onDocumentClick(): void {
     if (this.menuOpen()) this.menuOpen.set(false);
+  }
+  
+  onShare(event: MouseEvent): void {
+    event.stopPropagation();
+    this.shareNote.emit(this.note());
+  }
+
+  getInitials(name: string): string {
+    return name.trim().split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
   }
 }

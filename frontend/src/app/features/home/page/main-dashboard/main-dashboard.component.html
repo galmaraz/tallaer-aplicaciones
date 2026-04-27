@@ -21,6 +21,17 @@
         <rect width="18" height="18" x="3" y="3" rx="2" /><path d="m9 12 2 2 4-4" />
       </svg>
     </button>
+
+    <button (click)="openNewNoteWithImage()" title="Nueva nota con imagen"
+      class="p-2 rounded-lg text-white/35 hover:text-white/65 hover:bg-white/[0.08] transition-all">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="m21 15-5-5L5 21" />
+      </svg>
+    </button>
+
   </div>
 </div>
 
@@ -133,6 +144,7 @@
           [note]="note"
           (editNote)="openNote($event)"
           (softDeleteNote)="softDeleteNote($event)"
+          (shareNote)="onShareNote($event)"
           (duplicateNote)="duplicateNote($event)" />
       </div>
     }
@@ -157,8 +169,18 @@
   <app-note-editor
     [note]="selectedNote()"
     [initialType]="newNoteType()"
+    [autoOpenImagePicker]="openWithImagePicker()"
     (saved)="onNoteSaved($event)"
     (closed)="onEditorClosed()"
     (softDeleteRequested)="onEditorSoftDelete($event)"
     (duplicateRequested)="onEditorDuplicate($event)" />
+}
+@if (sharingNote(); as sharing) {
+@if (sharing.id) {
+@if (sharingNote(); as sharing) {
+@if (sharing.id) {
+<app-share-dialog [noteId]="sharing.id" [noteOwner]="sharing.usuario ?? null" (closed)="onShareDialogClosed()" />
+}
+}
+}
 }

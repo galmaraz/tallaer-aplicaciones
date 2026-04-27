@@ -9,11 +9,20 @@ export interface NoteContent {
   items?: NoteItem[];
 }
 
+export interface NoteOwner {
+  id: number;
+  name: string;
+  email: string;
+}
+
 export interface NoteView {
   id?: number;
   title: string;
   content: NoteContent;
   activo: boolean;
+  usuario_id?: number;
+  is_shared?: boolean;
+  usuario?: NoteOwner;
   deleted?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -24,6 +33,9 @@ export interface NoteRaw {
   title: string;
   content: string;
   activo: boolean;
+  usuario_id?: number;
+  is_shared?: boolean;
+  usuario?: NoteOwner;
   deleted?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -59,6 +71,9 @@ export function parseNoteView(raw: NoteRaw): NoteView {
     title: raw.title,
     content,
     activo: raw.activo,
+    usuario_id: raw.usuario_id,
+    is_shared: raw.is_shared,
+    usuario: raw.usuario,
     deleted: raw.deleted ?? false,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
@@ -71,6 +86,7 @@ export function serializeNote(note: NoteView): NoteRaw {
     title: note.title,
     content: JSON.stringify(note.content),
     activo: note.activo,
+    usuario_id: note.usuario_id,
     deleted: note.deleted ?? false,
   };
 }

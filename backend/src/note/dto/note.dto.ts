@@ -1,23 +1,26 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class NoteDto {
-
-    @IsOptional()
-    id?: number;
+  @IsNumber()
+  @IsOptional()
+  id?: number;
 
     @IsNotEmpty()
     @IsString()
     title!: string;
 
-    @IsNotEmpty()
-    @IsString()
-    content!: string;
+  @IsString()
+  content!: string;
 
-    @IsOptional()
-    @IsBoolean()
-    activo?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
 
-    @IsOptional()
-    @IsBoolean()
-    deleted?: boolean;
+  @IsNumber()
+  @IsNotEmpty()
+  usuario_id!: number;
+
+  @IsOptional()
+  @IsBoolean()
+  deleted?: boolean;
 }

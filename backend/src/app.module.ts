@@ -26,7 +26,8 @@ import { AttachmentService } from './attachment/attachment.service';
       expandVariables: true,
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: ormConfig,
+      inject: [ormConfig.KEY],
+      useFactory: (config) => config,
     }),
     TypeOrmModule.forFeature([
       Usuario,

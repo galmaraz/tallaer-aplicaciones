@@ -22,11 +22,16 @@ import {
 import { NoteService } from '../../services/note.service';
 import { AttachmentService } from '../../services/attachment.service';
 import { AttachmentView } from '../../models/attachment.model';
+import { NoteShareService } from '../../../note-share/services/noteshare.service';
+import { ShareDialogComponent } from '../../../note-share/components/share-dialog/share-dialog.component';
+import { NoteShare } from '../../../note-share/models/noteshare.interface';
+import { CurrentUserService } from '../../../../core/user/services/current.service';
+import { NoteShareRole } from '../../../note-share/models/noteshare-role.enum';
 
 @Component({
   selector: 'app-note-editor',
   standalone: true,
-  imports: [],
+  imports: [ShareDialogComponent],
   templateUrl: './note-editor.component.html',
 })
 export class NoteEditorComponent implements OnInit {
@@ -36,12 +41,15 @@ export class NoteEditorComponent implements OnInit {
   closed = output<void>();
   softDeleteRequested = output<number>();
   duplicateRequested = output<NoteView>();
+  autoOpenImagePicker = input(false);
 
   @ViewChild('attachmentInput')
   attachmentInput?: ElementRef<HTMLInputElement>;
 
   #noteService = inject(NoteService);
   #attachmentService = inject(AttachmentService);
+  #noteShareService = inject(NoteShareService);
+  #currentUser = inject(CurrentUserService);
   #destroyRef = inject(DestroyRef);
 
   title = signal('');
@@ -53,6 +61,9 @@ export class NoteEditorComponent implements OnInit {
   attachmentFeedback = signal<string | null>(null);
   attachmentFeedbackIsError = signal(false);
   moreMenuOpen = signal(false);
+
+  shareDialogOpen = signal(false);
+  collaborators = signal<NoteShare[]>([]);
 
   attachments = signal<AttachmentView[]>([]);
   loadingAttachments = signal(false);
@@ -67,6 +78,18 @@ export class NoteEditorComponent implements OnInit {
 
   canUndo = computed(() => this.#history().length > 0);
   canRedo = computed(() => this.#future().length > 0);
+  noteId = computed<number | null>(() => this.note()?.id ?? null);
+
+  isReadOnly = computed<boolean>(() => {
+    const note = this.note();
+    if (!note) return false;
+
+    const currentId = this.#currentUser.currentUserId();
+    if (note.usuario_id === currentId) return false;
+    const myShare = this.collaborators().find(c => c.usuario.id === currentId);
+    if (!myShare) return true;
+    return myShare.role === NoteShareRole.VIEWER;
+  });
 
   ngOnInit(): void {
     const note = this.note();
@@ -81,9 +104,15 @@ export class NoteEditorComponent implements OnInit {
       }
       if (note.id) {
         this.#loadAttachments(note.id);
+        this.#loadCollaborators(note.id);
       }
-    } else {
+    }  else {
       this.noteType.set(this.initialType());
+    if (this.autoOpenImagePicker()) {
+      setTimeout(() => this.openAttachmentPicker(), 150);
+    }
+    if (this.autoOpenImagePicker()) {
+      setTimeout(() => this.openAttachmentPicker(), 150);
     }
   }
 
@@ -98,6 +127,16 @@ export class NoteEditorComponent implements OnInit {
           this.loadingAttachments.set(false);
         },
         error: () => this.loadingAttachments.set(false),
+      });
+  }
+
+  #loadCollaborators(noteId: number): void {
+    this.#noteShareService
+      .getByNote(noteId)
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: (shares) => this.collaborators.set(shares),
+        error: () => this.collaborators.set([]),
       });
   }
 
@@ -152,6 +191,19 @@ export class NoteEditorComponent implements OnInit {
 
   onTextBodyChange(value: string): void { this.textBody.set(value); }
   onTextBodyBlur(): void { this.#saveToHistoryIfChanged(); }
+
+  openShareDialog(): void {
+    if (!this.noteId()) return;
+    this.shareDialogOpen.set(true);
+  }
+
+  closeShareDialog(): void {
+    this.shareDialogOpen.set(false);
+  }
+
+  onCollaboratorsChanged(updated: NoteShare[]): void {
+    this.collaborators.set(updated);
+  }
 
   addItem(): void {
     this.#saveToHistoryIfChanged();
@@ -274,12 +326,44 @@ export class NoteEditorComponent implements OnInit {
     }
 
     const noteId = this.note()?.id;
-    if (!noteId) {
-      this.#setAttachmentFeedback('Guarda la nota primero para poder subir imágenes.', true);
-      this.#resetAttachmentInput();
+    if (noteId) {
+      this.#uploadAttachment(file, noteId);
       return;
     }
 
+    // Si no tiene ID, guardar la nota primero y luego subir
+    const title = this.title().trim();
+    const items = this.items().filter(i => i.text.trim());
+    const content: NoteContent = { type: 'list', items };
+    const ownerId = this.#currentUser.currentUserId();
+    const noteView: NoteView = {
+      title: title || 'Sin título',
+      content,
+      activo: true,
+      usuario_id: ownerId ?? undefined,
+    };
+
+    this.saving.set(true);
+    this.#noteService
+      .save(serializeNote(noteView))
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe({
+        next: (savedNote) => {
+          this.saving.set(false);
+          this.saved.emit(savedNote);
+          if (savedNote.id) {
+            this.#uploadAttachment(file, savedNote.id);
+          }
+        },
+        error: () => {
+          this.saving.set(false);
+          this.#setAttachmentFeedback('No se pudo guardar la nota.', true);
+          this.#resetAttachmentInput();
+        },
+      });
+  }
+
+  #uploadAttachment(file: File, noteId: number): void {
     this.uploadingAttachment.set(true);
     this.#attachmentService
       .save(file, noteId)
@@ -336,17 +420,19 @@ export class NoteEditorComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      if (this.expandedImageUrl()) { this.closeExpandedImage(); return; }
-      if (this.moreMenuOpen()) { this.moreMenuOpen.set(false); return; }
+    if (event.key === 'Escape' && this.expandedImageUrl()) {
+      this.closeExpandedImage();
+      return;
     }
     const tag = (event.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
-      event.preventDefault(); this.undo();
+      event.preventDefault();
+      this.undo();
     }
     if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
-      event.preventDefault(); this.redo();
+      event.preventDefault();
+      this.redo();
     }
   }
 
@@ -360,6 +446,10 @@ export class NoteEditorComponent implements OnInit {
   }
 
   close(): void {
+    if (this.isReadOnly()) {
+      this.closed.emit();
+      return;
+    }
     if (this.saving()) return;
     const title = this.title().trim();
 
@@ -376,13 +466,20 @@ export class NoteEditorComponent implements OnInit {
       content = { type: 'list', items };
     }
 
-    if (isEmpty) { this.closed.emit(); return; }
+    if (isEmpty) {
+      this.closed.emit();
+      return;
+    }
+
+    const content: NoteContent = { type: 'list', items };
+    const ownerId = this.note()?.usuario_id ?? this.#currentUser.currentUserId();
 
     const noteView: NoteView = {
       id: this.note()?.id,
       title: title || 'Sin título',
       content,
       activo: true,
+      usuario_id: ownerId ?? undefined,
     };
 
     this.saving.set(true);
@@ -393,5 +490,9 @@ export class NoteEditorComponent implements OnInit {
         next: (savedNote) => { this.saved.emit(savedNote); this.closed.emit(); },
         error: () => { this.saving.set(false); this.closed.emit(); },
       });
+  }
+
+  getInitials(name: string): string {
+    return name.trim().split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
   }
 }
