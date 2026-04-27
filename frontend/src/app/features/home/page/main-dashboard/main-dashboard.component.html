@@ -140,7 +140,8 @@
   <div class="columns-1 md:columns-2 lg:columns-3 gap-5">
     @for (note of filteredNotes(); track note.id; let i = $index) {
       <div class="break-inside-avoid mb-5 note-enter" [style.animation-delay]="(i * 45) + 'ms'">
-        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)" />
+        <app-note-card [note]="note" (editNote)="openNote($event)" (deleteNote)="deleteNote($event)"
+          (shareNote)="onShareNote($event)" />
       </div>
     }
   </div>
@@ -162,4 +163,9 @@
     [autoOpenImagePicker]="openWithImagePicker()"
     (saved)="onNoteSaved($event)"
     (closed)="onEditorClosed()" />
+}
+@if (sharingNote(); as sharing) {
+@if (sharing.id) {
+<app-share-dialog [noteId]="sharing.id" [noteOwner]="sharing.usuario ?? null" (closed)="onShareDialogClosed()" />
+}
 }

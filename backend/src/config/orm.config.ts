@@ -17,7 +17,7 @@ export default registerAs(
         username: 'postgres',
         password: '1234',
         database: 'db',
-        entities: [Usuario, Noteshare, Note, Noteshare, Recordatorio],
+        entities: [Usuario, Noteshare, Note, Noteshare, Recordatorio, Attachment],
         synchronize: true,
         
         //  type: 'postgres',

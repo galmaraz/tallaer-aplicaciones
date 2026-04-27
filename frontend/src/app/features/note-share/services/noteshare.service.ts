@@ -13,21 +13,19 @@ export class NoteShareService {
     return this.#http.post<NoteShare[]>(`${this.#baseUrl}/getall`, {});
   }
 
-  /** Con qué usuarios está compartida una nota */
   getByNote(noteId: number): Observable<NoteShare[]> {
     return this.#http.post<NoteShare[]>(`${this.#baseUrl}/getbynote/${noteId}`, {});
   }
 
-  /** Notas compartidas con un usuario */
   getByUser(userId: number): Observable<NoteShare[]> {
     return this.#http.post<NoteShare[]>(`${this.#baseUrl}/getbyuser/${userId}`, {});
   }
 
-  save(payload: NoteSharePayload): Observable<unknown> {
-    return this.#http.post(`${this.#baseUrl}/save`, payload);
+  save(payload: NoteSharePayload): Observable<string> {
+    return this.#http.post(`${this.#baseUrl}/save`, payload, { responseType: 'text' });
   }
 
-  delete(id: number): Observable<unknown> {
-    return this.#http.post(`${this.#baseUrl}/deletebyid/${id}`, {});
+  delete(id: number): Observable<string> {
+    return this.#http.post(`${this.#baseUrl}/deletebyid/${id}`, {}, { responseType: 'text' });
   }
 }

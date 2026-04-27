@@ -1,11 +1,6 @@
 import { IsBoolean } from 'class-validator';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Usuario } from 'src/usuario/model/usuario.model';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Note {
@@ -21,6 +16,13 @@ export class Note {
   @Column()
   @IsBoolean()
   activo: boolean;
+
+  @ManyToOne(() => Usuario, data => data.id)
+  @JoinColumn({ name: 'usuario_id' })
+  usuario: Usuario;
+
+  @Column({ name: 'usuario_id' })
+  usuario_id: number;
 
   @CreateDateColumn()
   created_at: Date;

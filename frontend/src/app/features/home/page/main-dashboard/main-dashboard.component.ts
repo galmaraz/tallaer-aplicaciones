@@ -1,9 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { NoteView } from '../../../note/models/note.model';
 import { NoteService } from '../../../note/services/note.service';
 import { NoteFilterService } from '../../../note/services/note-filter.service';
 import { NoteEditorComponent } from '../../../note/components/note-editor/note-editor.component';
 import { NoteCardComponent } from '../../../note/components/note-card/note-card.component';
+import { CurrentUserService } from '../../../../core/user/services/current.service';
+import { ShareDialogComponent } from "../../../note-share/components/share-dialog/share-dialog.component";
 
 type ViewMode = 'grid' | 'list';
 
@@ -13,13 +15,14 @@ const byNewest = (a: NoteView, b: NoteView): number =>
 @Component({
   selector: 'app-main-dashboard',
   standalone: true,
-  imports: [NoteEditorComponent, NoteCardComponent],
+  imports: [NoteEditorComponent, NoteCardComponent, ShareDialogComponent],
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css',
 })
 export class MainDashboardComponent {
   #noteService = inject(NoteService);
   #filterService = inject(NoteFilterService);
+  #currentUser = inject(CurrentUserService)
 
   notes = signal<NoteView[]>([]);
   loading = signal(true);
@@ -28,6 +31,7 @@ export class MainDashboardComponent {
   selectedNote = signal<NoteView | null>(null);
   viewMode = signal<ViewMode>('grid');
   openWithImagePicker = signal(false);
+  sharingNote = signal<NoteView | null>(null);
 
   #savedDuringSession = false;
 
@@ -47,29 +51,30 @@ export class MainDashboardComponent {
   readonly isSearching = computed(() => this.#filterService.searchQuery().trim().length > 0);
   readonly searchQuery = computed(() => this.#filterService.searchQuery().trim());
 
-  ngOnInit(): void {
-    this.#loadNotes();
+  constructor() {
+    effect(() => {
+      const userId = this.#currentUser.currentUserId();
+      if (userId !== null) {
+        this.#loadNotes(userId);
+      }
+    }, { allowSignalWrites: true });
   }
 
   // skeleton
-  #loadNotes(): void {
+  #loadNotes(userId: number): void {
     this.loading.set(true);
     this.error.set(null);
-    this.#noteService.getAll().subscribe({
-      next: (data) => {
-        this.notes.set(data);
-        this.loading.set(false);
-      },
-      error: (err: Error) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      },
+    this.#noteService.getAll(userId).subscribe({
+      next: (data) => { this.notes.set(data); this.loading.set(false); },
+      error: (err) => { this.error.set(err.message); this.loading.set(false); },
     });
   }
 
   // Refresco silencioso sin skeleton
   #refreshNotes(): void {
-    this.#noteService.getAll().subscribe({
+    const userId = this.#currentUser.currentUserId();
+    if (userId === null) return;
+    this.#noteService.getAll(userId).subscribe({
       next: (data) => this.notes.set(data),
     });
   }
@@ -121,5 +126,14 @@ export class MainDashboardComponent {
       // Si falla, restaurar la lista desde el backend
       error: () => this.#refreshNotes(),
     });
+  }
+
+  onShareNote(note: NoteView): void {
+    this.sharingNote.set(note);
+  }
+
+  onShareDialogClosed(): void {
+    this.sharingNote.set(null);
+    this.#refreshNotes();
   }
 }
