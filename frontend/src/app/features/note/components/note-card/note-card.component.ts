@@ -39,6 +39,11 @@ export class NoteCardComponent implements OnInit {
   collaborators = signal<NoteShare[]>([]);
   menuOpen = signal(false);
 
+  isOwner = computed(() => {
+    const currentId = this.#currentUser.currentUserId();
+    return this.note().usuario_id === currentId;
+  });
+
   private readonly PREVIEW_LIMIT = 3;
 
   ngOnInit(): void {
@@ -94,7 +99,7 @@ export class NoteCardComponent implements OnInit {
     this.menuOpen.update(v => !v);
   }
 
-  onSoftDelete(event: MouseEvent): void {
+  onDelete(event: MouseEvent): void {
     event.stopPropagation();
     this.menuOpen.set(false);
     const id = this.note().id;

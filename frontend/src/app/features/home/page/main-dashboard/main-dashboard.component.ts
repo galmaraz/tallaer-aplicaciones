@@ -19,7 +19,7 @@ const byNewest = (a: NoteView, b: NoteView): number =>
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css',
 })
-export class MainDashboardComponent implements OnInit {
+export class MainDashboardComponent{
   #noteService = inject(NoteService);
   #filterService = inject(NoteFilterService);
   #currentUser = inject(CurrentUserService)
@@ -163,5 +163,13 @@ export class MainDashboardComponent implements OnInit {
     this.editorOpen.set(false);
     this.selectedNote.set(null);
     this.duplicateNote(note);
+  }
+
+  openNewNoteWithImage(): void {
+    this.#savedDuringSession = false;
+    this.selectedNote.set(null);
+    this.newNoteType.set('list');
+    this.openWithImagePicker.set(true);
+    this.editorOpen.set(true);
   }
 }

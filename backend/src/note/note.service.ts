@@ -85,4 +85,24 @@ export class NoteService {
   getTrash() {
     return this.repository.find({ where: { deleted: true } });
   }
+
+  async softDelete(id: number) {
+    const note = await this.repository.findOneBy({ id });
+    if (!note) throw new Error(`Nota con id ${id} no encontrada`);
+    await this.repository.update({ id }, { deleted: true });
+    return await this.repository.findOne({
+      where: { id },
+      relations: { usuario: true },
+    });
+  }
+
+  async restore(id: number) {
+    const note = await this.repository.findOneBy({ id });
+    if (!note) throw new Error(`Nota con id ${id} no encontrada`);
+    await this.repository.update({ id }, { deleted: false });
+    return await this.repository.findOne({
+      where: { id },
+      relations: { usuario: true },
+    });
+  }
 }

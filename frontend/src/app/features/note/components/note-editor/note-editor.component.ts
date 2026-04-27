@@ -106,11 +106,10 @@ export class NoteEditorComponent implements OnInit {
         this.#loadAttachments(note.id);
         this.#loadCollaborators(note.id);
       }
-    }  else {
+    } else {
       this.noteType.set(this.initialType());
-    if (this.autoOpenImagePicker()) {
-      setTimeout(() => this.openAttachmentPicker(), 150);
     }
+
     if (this.autoOpenImagePicker()) {
       setTimeout(() => this.openAttachmentPicker(), 150);
     }
@@ -471,7 +470,7 @@ export class NoteEditorComponent implements OnInit {
       return;
     }
 
-    const content: NoteContent = { type: 'list', items };
+    // const content: NoteContent = { type: 'list', items };
     const ownerId = this.note()?.usuario_id ?? this.#currentUser.currentUserId();
 
     const noteView: NoteView = {
